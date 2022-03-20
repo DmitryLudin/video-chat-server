@@ -23,7 +23,7 @@
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS -g './config/git/commitlint.js'"
+      "commit-msg": "yarn commitlint -E HUSKY_GIT_PARAMS -g './config/git/commitlint.js'"
     }
   },
   "lint-staged": {
