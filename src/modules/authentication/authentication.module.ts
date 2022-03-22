@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { LogInWithCredentialsGuard } from 'src/modules/authentication/guards/log-in-with-credentials.guard';
-import { LocalSerializer } from 'src/modules/authentication/strategy/local.serializer';
-import { LocalStrategy } from 'src/modules/authentication/strategy/local.strategy';
-import { AuthenticationService } from './authentication.service';
-import { UsersModule } from '../users/users.module';
-import { AuthenticationController } from './authentication.controller';
+import { AuthenticationController } from 'src/modules/authentication/authentication.controller';
+import { AuthenticationService } from 'src/modules/authentication/authentication.service';
+import { LogInWithCredentialsGuard } from 'src/modules/authentication/guards';
+import {
+  LocalSerializer,
+  LocalStrategy,
+} from 'src/modules/authentication/strategy';
+import { UsersModule } from 'src/modules/users/users.module';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({

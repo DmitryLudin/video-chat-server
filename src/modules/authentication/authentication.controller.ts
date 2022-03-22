@@ -9,10 +9,12 @@ import {
   ClassSerializerInterceptor,
   Get,
 } from '@nestjs/common';
-import { RegisterDto } from 'src/modules/authentication/dto/register.dto';
-import { CookieAuthenticationGuard } from 'src/modules/authentication/guards/cookie-authentication.guard';
-import { LogInWithCredentialsGuard } from 'src/modules/authentication/guards/log-in-with-credentials.guard';
-import { RequestWithUser } from 'src/modules/authentication/types/request-with-user.interface';
+import { RegisterDto } from 'src/modules/authentication/dto';
+import {
+  CookieAuthenticationGuard,
+  LogInWithCredentialsGuard,
+} from 'src/modules/authentication/guards';
+import { RequestWithUser } from 'src/modules/authentication/types';
 import { AuthenticationService } from './authentication.service';
 
 @Controller('authentication')
