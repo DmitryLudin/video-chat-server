@@ -6,22 +6,19 @@ export class User {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @Column({ unique: true })
-  public email: string;
-
   @Column()
   @Exclude()
   public password: string;
 
-  @Column()
+  @Column({ unique: true })
   public username: string;
 
-  @Column()
-  public isOnline: boolean;
+  @Column({ default: false })
+  public isOnline?: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   public displayName?: string;
 
-  @Column()
+  @Column({ nullable: true })
   public avatar?: string;
 }
