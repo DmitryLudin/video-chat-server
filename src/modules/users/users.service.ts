@@ -12,7 +12,7 @@ export class UsersService {
   ) {}
 
   async getByIds(ids: number[]) {
-    return this.usersRepository.find({
+    return await this.usersRepository.find({
       where: { id: In(ids) },
     });
   }

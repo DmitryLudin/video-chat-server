@@ -13,12 +13,6 @@ export class User {
   @Column({ unique: true })
   public username: string;
 
-  @Column({ default: false })
-  public isOnline?: boolean;
-
   @Column({ nullable: true })
   public displayName?: string;
-
-  @Column({ nullable: true })
-  public avatar?: string;
 }

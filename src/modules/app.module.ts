@@ -3,11 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
+import { ChannelsModule } from 'src/modules/channels/channels.module';
 
 @Module({
   imports: [
-    DatabaseModule,
-    AuthenticationModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         POSTGRES_HOST: Joi.string().required(),
@@ -20,6 +19,9 @@ import { AuthenticationModule } from './authentication/authentication.module';
         REDIS_PORT: Joi.number().required(),
       }),
     }),
+    DatabaseModule,
+    AuthenticationModule,
+    ChannelsModule,
   ],
   controllers: [],
   providers: [],
