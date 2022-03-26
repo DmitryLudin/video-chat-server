@@ -17,7 +17,7 @@ export class ChannelsService {
     private readonly messagesRepository: Repository<Message>,
   ) {}
 
-  async getById(id: string) {
+  async getById(id: number) {
     const channel = await this.channelsRepository.findOne({
       where: { id },
     });
@@ -33,9 +33,49 @@ export class ChannelsService {
     return await this.channelsRepository.find();
   }
 
-  async getMessages(channelId: string) {
+  async create(channelData: CreateChannelDto) {
+    const { ownerId, ...otherData } = channelData;
+
+    const channel = this.channelsRepository.create({
+      ...otherData,
+      owner: ownerId as unknown,
+      members: [{ id: ownerId }] as unknown[],
+    });
+
+    await this.channelsRepository.save(channel);
+  }
+
+  async update(id: number, channelData: UpdateChannelDto) {
+    const channel = await this.getById(id);
+    const { ownerId, members, ...otherData } = channelData;
+
+    await this.channelsRepository.save({
+      ...channel,
+      ...otherData,
+      owner: (ownerId || channel.owner) as unknown,
+      members: [
+        ...channel.members,
+        ...(members.map((memberId) => ({ id: memberId })) as unknown[]),
+      ],
+    });
+  }
+
+  // Методы управления созвоном
+  async startMeeting(id: string) {
+    return await this.channelsRepository.update(id, { isMeetingStarted: true });
+  }
+
+  async endMeeting(id: string) {
+    return await this.channelsRepository.update(id, {
+      isMeetingStarted: false,
+    });
+  }
+
+  // Методы сообщениий
+  async getMessages(channelId: number) {
     return await this.messagesRepository.find({
       where: { channelId },
+      relations: ['author', 'reply'],
     });
   }
 
@@ -49,33 +89,5 @@ export class ChannelsService {
     });
 
     return await this.messagesRepository.save(message);
-  }
-
-  async create(channelData: CreateChannelDto) {
-    const channel = await this.channelsRepository.create({
-      ...channelData,
-    });
-
-    return await this.channelsRepository.save(channel);
-  }
-
-  async update(id: string, channelData: UpdateChannelDto) {
-    const channel = await this.getById(id);
-
-    if (!channel) {
-      throw new NotFoundException(`There is no channel under id ${id}`);
-    }
-
-    return await this.channelsRepository.save({ ...channel, ...channelData });
-  }
-
-  async startMeeting(id: string) {
-    return await this.channelsRepository.update(id, { isMeetingStarted: true });
-  }
-
-  async endMeeting(id: string) {
-    return await this.channelsRepository.update(id, {
-      isMeetingStarted: false,
-    });
   }
 }

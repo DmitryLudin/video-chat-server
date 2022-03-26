@@ -5,12 +5,14 @@ import {
   Column,
   ManyToMany,
   JoinTable,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
 export class Channel {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column({ length: 20 })
   name: string;
@@ -18,8 +20,11 @@ export class Channel {
   @Column({ length: 60 })
   description: string;
 
-  @Column()
-  ownerId: string;
+  @ManyToOne(() => User, (user: User) => user.channels, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'owner_id' })
+  owner: User;
 
   @Column({ default: false })
   isMeetingStarted: boolean;

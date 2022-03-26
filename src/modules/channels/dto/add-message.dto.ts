@@ -1,15 +1,16 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class AddMessageDto {
   @IsString()
+  @MaxLength(250)
   text: string;
 
-  @IsOptional()
-  channelId?: string;
+  @IsNumber()
+  channelId: number;
+
+  @IsNumber()
+  userId: number;
 
   @IsOptional()
-  userId?: string;
-
-  @IsOptional()
-  replyMessageId: string;
+  replyMessageId?: string;
 }

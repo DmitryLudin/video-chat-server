@@ -1,18 +1,22 @@
 import { Exclude } from 'class-transformer';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Channel } from 'src/modules/channels/entities';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
-  public id: number;
+  id: number;
 
   @Column()
   @Exclude()
-  public password: string;
+  password: string;
 
   @Column({ unique: true })
-  public username: string;
+  username: string;
 
   @Column({ nullable: true })
-  public displayName?: string;
+  displayName?: string;
+
+  @OneToMany(() => Channel, (channel: Channel) => channel.owner)
+  channels: Channel[];
 }
