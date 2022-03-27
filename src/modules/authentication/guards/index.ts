@@ -1,2 +1,3 @@
-export * from './cookie-authentication.guard';
-export * from './log-in-with-credentials.guard';
+export * from './local-authentication.guard';
+export * from './jwt-authentication.guard';
+export * from './jwt-refresh.guard';

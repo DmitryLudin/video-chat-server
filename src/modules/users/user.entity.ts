@@ -19,4 +19,10 @@ export class User {
 
   @OneToMany(() => Channel, (channel: Channel) => channel.owner)
   channels: Channel[];
+
+  @Column({
+    nullable: true,
+  })
+  @Exclude()
+  currentHashedRefreshToken?: string;
 }
