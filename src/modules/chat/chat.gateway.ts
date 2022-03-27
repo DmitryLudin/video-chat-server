@@ -1,38 +1,40 @@
+import { UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AuthenticationService } from 'src/modules/authentication/authentication.service';
+import { JwtAuthenticationGuard } from 'src/modules/authentication/guards';
+import { ChatService } from 'src/modules/chat/chat.service';
 import { CHAT_ACTIONS } from 'src/modules/chat/constants/actions.enum';
 
 @WebSocketGateway({
   allowEIO3: true,
 })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly authenticationService: AuthenticationService) {}
+  constructor(private readonly chatService: ChatService) {}
 
-  @SubscribeMessage('login')
-  async logIn(
-    @MessageBody() data: { username: string },
-    @ConnectedSocket() socket: Socket,
-  ): Promise<string> {
-    return 'Hello world!';
+  async handleConnection(socket: Socket) {
+    const author = await this.chatService.getUserFromSocket(socket);
+
+    if (!author) {
+      socket.disconnect();
+    }
   }
 
+  @UseGuards(JwtAuthenticationGuard)
   @SubscribeMessage(CHAT_ACTIONS.SEND_MESSAGE)
-  handleMessage(
+  async handleMessage(
     @MessageBody() content: string,
     @ConnectedSocket() socket: Socket,
-  ): string {
+  ): Promise<string> {
     return 'Hello world!';
   }
 }
