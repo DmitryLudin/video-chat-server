@@ -1,20 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  AddMessageDto,
-  CreateChannelDto,
-  UpdateChannelDto,
-} from 'src/modules/channels/dto';
-import { Message, Channel } from 'src/modules/channels/entities';
+import { CreateChannelDto, UpdateChannelDto } from 'src/modules/channels/dto';
+import { Channel } from 'src/modules/channels/entities';
 import { Repository } from 'typeorm';
+import { ArrayContains } from 'typeorm/find-options/operator/ArrayContains';
 
 @Injectable()
 export class ChannelsService {
   constructor(
     @InjectRepository(Channel)
     private readonly channelsRepository: Repository<Channel>,
-    @InjectRepository(Message)
-    private readonly messagesRepository: Repository<Message>,
   ) {}
 
   async getById(id: number) {
@@ -33,13 +28,28 @@ export class ChannelsService {
     return await this.channelsRepository.find();
   }
 
+  async getAllForUser(userId: number) {
+    return await this.channelsRepository.find({
+      where: { members: ArrayContains([userId]) },
+      relations: ['members', 'owner'],
+    });
+  }
+
   async create(channelData: CreateChannelDto) {
-    const { ownerId, ...otherData } = channelData;
+    const { ownerId, memberIds, ...otherData } = channelData;
+    let members = [{ id: ownerId }];
+
+    if (memberIds?.length > 0) {
+      members = [
+        ...members,
+        ...memberIds.map((memberId) => ({ id: memberId })),
+      ];
+    }
 
     const channel = this.channelsRepository.create({
       ...otherData,
       owner: ownerId as unknown,
-      members: [{ id: ownerId }] as unknown[],
+      members,
     });
 
     await this.channelsRepository.save(channel);
@@ -47,16 +57,21 @@ export class ChannelsService {
 
   async update(id: number, channelData: UpdateChannelDto) {
     const channel = await this.getById(id);
-    const { ownerId, members, ...otherData } = channelData;
+    const { ownerId, memberIds, ...otherData } = channelData;
+    let members = channel.members as unknown[];
+
+    if (memberIds?.length > 0) {
+      members = [
+        ...members,
+        ...memberIds.map((memberId) => ({ id: memberId })),
+      ];
+    }
 
     await this.channelsRepository.save({
       ...channel,
       ...otherData,
       owner: (ownerId || channel.owner) as unknown,
-      members: [
-        ...channel.members,
-        ...(members.map((memberId) => ({ id: memberId })) as unknown[]),
-      ],
+      members,
     });
   }
 
@@ -69,25 +84,5 @@ export class ChannelsService {
     return await this.channelsRepository.update(id, {
       isMeetingStarted: false,
     });
-  }
-
-  // Методы сообщениий
-  async getMessages(channelId: number) {
-    return await this.messagesRepository.find({
-      where: { channelId },
-      relations: ['author', 'reply'],
-    });
-  }
-
-  async addMessage(messageData: AddMessageDto) {
-    const { userId, replyMessageId, ...otherData } = messageData;
-
-    const message = await this.messagesRepository.create({
-      ...otherData,
-      author: userId as unknown,
-      reply: replyMessageId as unknown,
-    });
-
-    return await this.messagesRepository.save(message);
   }
 }

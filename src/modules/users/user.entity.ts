@@ -17,12 +17,10 @@ export class User {
   @Column({ nullable: true })
   displayName?: string;
 
-  @OneToMany(() => Channel, (channel: Channel) => channel.owner)
-  channels: Channel[];
-
-  @Column({
-    nullable: true,
-  })
+  @Column({ nullable: true })
   @Exclude()
   currentHashedRefreshToken?: string;
+
+  @OneToMany(() => Channel, (channel: Channel) => channel.owner)
+  channels: Channel[];
 }

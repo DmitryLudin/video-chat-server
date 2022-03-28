@@ -27,5 +27,5 @@ export class CreateChannelDto {
 
   @IsOptional()
   @IsArray()
-  readonly members?: number[];
+  readonly memberIds?: number[];
 }

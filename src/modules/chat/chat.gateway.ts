@@ -12,9 +12,7 @@ import { JwtAuthenticationGuard } from 'src/modules/authentication/guards';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { CHAT_ACTIONS } from 'src/modules/chat/constants/actions.enum';
 
-@WebSocketGateway({
-  allowEIO3: true,
-})
+@WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;

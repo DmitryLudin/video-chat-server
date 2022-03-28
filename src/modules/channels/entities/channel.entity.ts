@@ -7,6 +7,8 @@ import {
   JoinTable,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -17,8 +19,8 @@ export class Channel {
   @Column({ length: 20 })
   name: string;
 
-  @Column({ length: 60 })
-  description: string;
+  @Column({ length: 60, nullable: true })
+  description?: string;
 
   @ManyToOne(() => User, (user: User) => user.channels, {
     eager: true,
@@ -32,4 +34,10 @@ export class Channel {
   @ManyToMany(() => User, { eager: true })
   @JoinTable()
   members: Array<User>;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -28,5 +28,5 @@ export class UpdateChannelDto {
 
   @IsOptional()
   @IsArray()
-  readonly members?: number[];
+  readonly memberIds?: number[];
 }

@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -28,5 +29,8 @@ export class Message {
   reply: Message;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
