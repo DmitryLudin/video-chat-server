@@ -52,7 +52,7 @@ export class ChannelsService {
       members,
     });
 
-    await this.channelsRepository.save(channel);
+    return await this.channelsRepository.save(channel);
   }
 
   async update(id: number, channelData: UpdateChannelDto) {
