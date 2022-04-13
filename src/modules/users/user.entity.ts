@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { Channel } from 'src/modules/channels/entities';
+import { Meeting } from 'src/modules/meetings/entities';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -21,6 +21,6 @@ export class User {
   @Exclude()
   currentHashedRefreshToken?: string;
 
-  @OneToMany(() => Channel, (channel: Channel) => channel.owner)
-  channels: Channel[];
+  @OneToMany(() => Meeting, (meeting: Meeting) => meeting.owner)
+  meetings: Meeting[];
 }

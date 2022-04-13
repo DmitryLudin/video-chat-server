@@ -6,7 +6,7 @@ export class AddMessageDto {
   text: string;
 
   @IsNumber()
-  channelId: number;
+  meetingId: string;
 
   @IsNumber()
   userId: number;

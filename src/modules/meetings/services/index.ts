@@ -1,2 +1,2 @@
-export * from './channels.service';
+export * from './meetings.service';
 export * from './messages.service';

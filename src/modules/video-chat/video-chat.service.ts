@@ -5,7 +5,7 @@ import { parse } from 'cookie';
 import { AuthenticationService } from 'src/modules/authentication/authentication.service';
 
 @Injectable()
-export class ChatService {
+export class VideoChatService {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
   async getUserFromSocket(socket: Socket) {
@@ -17,7 +17,7 @@ export class ChatService {
       );
 
     if (!user) {
-      throw new WsException('Invalid credentials.');
+      throw new WsException('Неверные учетные данные.');
     }
 
     return user;

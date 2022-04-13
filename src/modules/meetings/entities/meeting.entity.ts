@@ -2,34 +2,23 @@ import { User } from 'src/modules/users/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
-  Column,
   ManyToMany,
   JoinTable,
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Channel {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class Meeting {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ length: 20 })
-  name: string;
-
-  @Column({ length: 60, nullable: true })
-  description?: string;
-
-  @ManyToOne(() => User, (user: User) => user.channels, {
+  @ManyToOne(() => User, (user: User) => user.meetings, {
     eager: true,
   })
   @JoinColumn({ name: 'owner_id' })
   owner: User;
-
-  @Column({ default: false })
-  isMeetingStarted: boolean;
 
   @ManyToMany(() => User, { eager: true })
   @JoinTable()
@@ -37,7 +26,4 @@ export class Channel {
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

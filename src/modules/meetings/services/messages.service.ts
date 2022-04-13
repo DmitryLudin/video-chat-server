@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AddMessageDto } from 'src/modules/channels/dto';
-import { Message } from 'src/modules/channels/entities';
+import { AddMessageDto } from 'src/modules/meetings/dto';
+import { Message } from 'src/modules/meetings/entities';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -11,9 +11,9 @@ export class MessagesService {
     private readonly messagesRepository: Repository<Message>,
   ) {}
 
-  async getAllByChannelId(channelId: number) {
+  async getAllByMeetingId(meetingId: string) {
     return await this.messagesRepository.find({
-      where: { channelId },
+      where: { meetingId },
       relations: ['author', 'reply'],
     });
   }

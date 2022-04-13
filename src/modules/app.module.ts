@@ -4,8 +4,8 @@ import * as Joi from '@hapi/joi';
 import { UsersModule } from 'src/modules/users/users.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
-import { ChannelsModule } from 'src/modules/channels/channels.module';
-import { ChatModule } from './chat/chat.module';
+import { MeetingModule } from 'src/modules/meetings/meeting.module';
+import { VideoChatModule } from 'src/modules/video-chat/video-chat.module';
 
 @Module({
   imports: [
@@ -28,8 +28,8 @@ import { ChatModule } from './chat/chat.module';
     UsersModule,
     DatabaseModule,
     AuthenticationModule,
-    ChannelsModule,
-    ChatModule,
+    MeetingModule,
+    VideoChatModule,
   ],
   controllers: [],
 })

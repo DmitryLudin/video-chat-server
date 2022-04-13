@@ -23,7 +23,7 @@ export class UsersService {
 
     if (!user) {
       throw new HttpException(
-        'User with this id does not exist',
+        'Пользователь с таким ID не существует',
         HttpStatus.NOT_FOUND,
       );
     }
@@ -36,7 +36,7 @@ export class UsersService {
 
     if (!user) {
       throw new HttpException(
-        'User with this username does not exist',
+        'Пользователь с таким email не существует',
         HttpStatus.NOT_FOUND,
       );
     }

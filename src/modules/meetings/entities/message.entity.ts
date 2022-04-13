@@ -18,7 +18,7 @@ export class Message {
   text: string;
 
   @Column()
-  channelId: number;
+  meetingId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'author_id' })

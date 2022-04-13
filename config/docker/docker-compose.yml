@@ -1,7 +1,7 @@
 version: "3"
 services:
-#  video-chat-server:
-#    container_name: video-chat-server
+#  video-video-chat-server:
+#    container_name: video-video-chat-server
 #    build:
 #      dockerfile: Dockerfile
 #      context: ../../

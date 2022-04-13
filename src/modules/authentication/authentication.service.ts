@@ -28,13 +28,13 @@ export class AuthenticationService {
 
       if (postgresError?.code === PostgresErrorCode.UniqueViolation) {
         throw new HttpException(
-          'User with that username already exists',
+          'Пользователь с таким логином уже существует',
           HttpStatus.BAD_REQUEST,
         );
       }
 
       throw new HttpException(
-        'Something went wrong',
+        'Что-то пошло не так',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -47,7 +47,7 @@ export class AuthenticationService {
       return user;
     } catch {
       throw new HttpException(
-        'Wrong credentials provided',
+        'Предоставленны неверные учетные данные',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -111,7 +111,7 @@ export class AuthenticationService {
 
     if (!isPasswordMatching) {
       throw new HttpException(
-        'Wrong credentials provided',
+        'Предоставленны неверные учетные данные',
         HttpStatus.BAD_REQUEST,
       );
     }
