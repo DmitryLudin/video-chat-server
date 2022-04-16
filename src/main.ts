@@ -2,16 +2,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { RedisIoAdapter } from 'src/adapters/redis-io.adapter';
+import { cors } from 'src/constants/cors';
 import { AppModule } from 'src/modules/app.module';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { runInCluster } from 'src/utils/run-in-cluster.util';
-
-const cors = {
-  origin: ['http://localhost:3000'],
-  credentials: true,
-  allowedHeaders: ['Accept', 'Content-Type'],
-};
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -1,12 +1,14 @@
+import { Exclude } from 'class-transformer';
 import { User } from 'src/modules/users/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
-  ManyToMany,
-  JoinTable,
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 
 @Entity()
@@ -14,15 +16,20 @@ export class Meeting {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user: User) => user.meetings, {
+  @ManyToOne(() => User, {
     eager: true,
+    cascade: true,
   })
-  @JoinColumn({ name: 'owner_id' })
+  @JoinColumn({ name: 'ownerId' })
   owner: User;
+
+  @Column()
+  @Exclude()
+  ownerId: number;
 
   @ManyToMany(() => User, { eager: true })
   @JoinTable()
-  members: Array<User>;
+  members: User[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -28,7 +28,7 @@ export class AuthenticationService {
 
       if (postgresError?.code === PostgresErrorCode.UniqueViolation) {
         throw new HttpException(
-          'Пользователь с таким логином уже существует',
+          'Пользователь с таким логином или паролем уже существует',
           HttpStatus.BAD_REQUEST,
         );
       }

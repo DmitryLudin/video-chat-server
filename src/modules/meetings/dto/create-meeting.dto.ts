@@ -1,11 +1,6 @@
-import { IsArray, IsNumber, IsOptional } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class CreateMeetingDto {
-  @IsOptional()
   @IsNumber()
-  readonly ownerId?: number;
-
-  @IsOptional()
-  @IsArray()
-  readonly memberIds?: number[];
+  readonly ownerId: number;
 }

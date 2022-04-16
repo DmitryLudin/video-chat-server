@@ -1,4 +1,8 @@
-import { OnModuleInit } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  OnModuleInit,
+  UseInterceptors,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -7,23 +11,31 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsResponse,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { cors } from 'src/constants/cors';
+import { Meeting, Message } from 'src/modules/meetings/entities';
 import {
   MeetingsService,
   MessagesService,
 } from 'src/modules/meetings/services';
+import { User } from 'src/modules/users/user.entity';
 import { JoinMeetingDto } from 'src/modules/video-chat/dto';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 import { VideoChatAction } from 'src/modules/video-chat/constants/actions.enum';
 import { ConnectedUsersService } from 'src/modules/video-chat/services';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors,
+})
 export class VideoChatGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   @WebSocketServer()
   server: Server;
+
+  connectedUsers: Map<string, string> = new Map();
 
   constructor(
     private readonly videoChatService: VideoChatService,
@@ -40,6 +52,7 @@ export class VideoChatGateway
     try {
       // Получаем юзера если он аутентифицирован
       const user = await this.videoChatService.getUserFromSocket(client);
+      console.log('connected', client.id);
       // Добавляем юзера к присоединенным в базу
       await this.connectedUsersService.create({
         socketId: client.id,
@@ -51,20 +64,33 @@ export class VideoChatGateway
   }
 
   async handleDisconnect(client: Socket) {
+    console.log('disconnect');
     await this.connectedUsersService.deleteBySocketId(client.id);
     client.disconnect();
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @SubscribeMessage(VideoChatAction.JOIN_MEETING)
   async handleJoinMeeting(
     @MessageBody() meetingData: JoinMeetingDto,
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      const meeting = await this.meetingsService.getById(meetingData.meetingId);
-      const messages = await this.messagesService.getAllByMeetingId(meeting.id);
-      client.join(meeting.id);
-      client.emit(VideoChatAction.MESSAGES, messages);
+      const connectedUsers =
+        await this.connectedUsersService.findAllUsersBySocketId(client.id);
+      const userIds = connectedUsers.map(
+        (connectedUser) => connectedUser.user.id,
+      );
+      // const meeting = await this.meetingsService.update(meetingData.meetingId, {
+      //   memberIds: userIds,
+      // });
+      // const messages = await this.messagesService.getAllByMeetingId(meeting.id);
+      // console.log(meeting);
+      // client.join(meeting.id);
+      // return {
+      //   event: VideoChatAction.JOIN_MEETING,
+      //   data: { meeting, messages },
+      // };
     } catch (error) {
       console.log(error);
     }

@@ -36,7 +36,7 @@ export class UsersService {
 
     if (!user) {
       throw new HttpException(
-        'Пользователь с таким email не существует',
+        'Пользователь с таким никнеймом не существует',
         HttpStatus.NOT_FOUND,
       );
     }

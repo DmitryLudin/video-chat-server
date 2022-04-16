@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateMeetingDto, UpdateMeetingDto } from 'src/modules/meetings/dto';
+import { CreateMeetingDto, UpdateMembersDto } from 'src/modules/meetings/dto';
 import { Meeting } from 'src/modules/meetings/entities';
+import { User } from 'src/modules/users/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -24,42 +25,18 @@ export class MeetingsService {
   }
 
   async create(meetingData: CreateMeetingDto) {
-    const { ownerId, memberIds, ...otherData } = meetingData;
-    let members = [{ id: ownerId }];
-
-    if (memberIds?.length > 0) {
-      members = [
-        ...members,
-        ...memberIds.map((memberId) => ({ id: memberId })),
-      ];
-    }
-
-    const meeting = this.meetingsRepository.create({
-      ...otherData,
-      owner: ownerId as unknown,
-      members,
-    });
-
+    const { ownerId } = meetingData;
+    const members = [{ id: ownerId } as unknown as User];
+    const meeting = this.meetingsRepository.create({ ownerId, members });
     return await this.meetingsRepository.save(meeting);
   }
 
-  async update(id: string, meetingData: UpdateMeetingDto) {
+  async updateMembers(id: string, meetingData: UpdateMembersDto) {
     const meeting = await this.getById(id);
-    const { ownerId, memberIds, ...otherData } = meetingData;
-    let members = meeting.members as unknown[];
 
-    if (memberIds?.length > 0) {
-      members = [
-        ...members,
-        ...memberIds.map((memberId) => ({ id: memberId })),
-      ];
-    }
-
-    await this.meetingsRepository.save({
+    return await this.meetingsRepository.save({
       ...meeting,
-      ...otherData,
-      owner: (ownerId || meeting.owner) as unknown,
-      members,
+      members: [...meeting.members, ...meetingData.members],
     });
   }
 
