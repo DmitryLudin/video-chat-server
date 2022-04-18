@@ -13,60 +13,29 @@ import {
   WebSocketServer,
   WsResponse,
 } from '@nestjs/websockets';
+import { instanceToPlain } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
 import { cors } from 'src/constants/cors';
 import { Meeting, Message } from 'src/modules/meetings/entities';
-import {
-  MeetingsService,
-  MessagesService,
-} from 'src/modules/meetings/services';
-import { User } from 'src/modules/users/user.entity';
-import { JoinMeetingDto } from 'src/modules/video-chat/dto';
+import { JoinMeetingDto, LeaveMeetingDto } from 'src/modules/video-chat/dto';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 import { VideoChatAction } from 'src/modules/video-chat/constants/actions.enum';
-import { ConnectedUsersService } from 'src/modules/video-chat/services';
 
 @WebSocketGateway({
   cors,
 })
-export class VideoChatGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
-{
+export class VideoChatGateway implements OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  connectedUsers: Map<string, string> = new Map();
-
-  constructor(
-    private readonly videoChatService: VideoChatService,
-    private readonly meetingsService: MeetingsService,
-    private readonly connectedUsersService: ConnectedUsersService,
-    private readonly messagesService: MessagesService,
-  ) {}
+  constructor(private readonly videoChatService: VideoChatService) {}
 
   async onModuleInit() {
-    await this.connectedUsersService.deleteAll();
-  }
-
-  async handleConnection(client: Socket) {
-    try {
-      // Получаем юзера если он аутентифицирован
-      const user = await this.videoChatService.getUserFromSocket(client);
-      console.log('connected', client.id);
-      // Добавляем юзера к присоединенным в базу
-      await this.connectedUsersService.create({
-        socketId: client.id,
-        userId: user.id,
-      });
-    } catch {
-      client.disconnect();
-    }
+    this.videoChatService.clearConnectedUsers();
   }
 
   async handleDisconnect(client: Socket) {
-    console.log('disconnect');
-    await this.connectedUsersService.deleteBySocketId(client.id);
-    client.disconnect();
+    await this.videoChatService.disconnectUser(client);
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
@@ -74,26 +43,46 @@ export class VideoChatGateway
   async handleJoinMeeting(
     @MessageBody() meetingData: JoinMeetingDto,
     @ConnectedSocket() client: Socket,
-  ) {
+  ): Promise<WsResponse<{ meeting: Meeting; messages: Message[] }>> {
     try {
-      const connectedUsers =
-        await this.connectedUsersService.findAllUsersBySocketId(client.id);
-      const userIds = connectedUsers.map(
-        (connectedUser) => connectedUser.user.id,
+      const { meeting, messages } = await this.videoChatService.joinMeeting(
+        client,
+        meetingData,
       );
-      // const meeting = await this.meetingsService.update(meetingData.meetingId, {
-      //   memberIds: userIds,
-      // });
-      // const messages = await this.messagesService.getAllByMeetingId(meeting.id);
-      // console.log(meeting);
-      // client.join(meeting.id);
-      // return {
-      //   event: VideoChatAction.JOIN_MEETING,
-      //   data: { meeting, messages },
-      // };
+
+      client.join(meeting.id);
+      client.to(meeting.id).emit(VideoChatAction.JOIN_MEETING, {
+        meeting: this.deserializeData(meeting),
+      });
+      return {
+        event: VideoChatAction.JOIN_MEETING,
+        data: { meeting, messages },
+      };
     } catch (error) {
       console.log(error);
     }
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SubscribeMessage(VideoChatAction.LEAVE_MEETING)
+  async handleLeaveMeeting(
+    @MessageBody() leaveMeetingData: LeaveMeetingDto,
+    @ConnectedSocket() client: Socket,
+  ): Promise<WsResponse<{ meeting: Meeting }>> {
+    const meeting = await this.videoChatService.leaveMeeting(leaveMeetingData);
+
+    client.leave(meeting.id);
+    client.to(meeting.id).emit(VideoChatAction.LEAVE_MEETING, {
+      meeting: this.deserializeData(meeting),
+    });
+    return {
+      event: VideoChatAction.LEAVE_MEETING,
+      data: { meeting },
+    };
+  }
+
+  private deserializeData<T extends object>(data: T): T {
+    return instanceToPlain(data) as T;
   }
 
   // @SubscribeMessage(VideoChatAction.CREATE_MEETING)

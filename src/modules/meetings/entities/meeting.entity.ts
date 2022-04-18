@@ -1,4 +1,5 @@
 import { Exclude } from 'class-transformer';
+import { Member } from 'src/modules/meetings/entities/member.entity';
 import { User } from 'src/modules/users/user.entity';
 import {
   Entity,
@@ -7,8 +8,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   Column,
-  ManyToMany,
-  JoinTable,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -27,9 +27,12 @@ export class Meeting {
   @Exclude()
   ownerId: number;
 
-  @ManyToMany(() => User, { eager: true })
-  @JoinTable()
-  members: User[];
+  @OneToMany(() => Member, (member) => member.meeting, {
+    eager: true,
+    cascade: true,
+  })
+  @JoinColumn()
+  members: Member[];
 
   @CreateDateColumn()
   createdAt: Date;

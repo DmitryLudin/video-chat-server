@@ -1,9 +1,9 @@
 import { IsNumber, IsString } from 'class-validator';
 
-export class CreateConnectedUserDto {
+export class LeaveMeetingDto {
   @IsString()
-  socketId: string;
+  meetingId: string;
 
   @IsNumber()
-  userId: number;
+  memberId: number;
 }

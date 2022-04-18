@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateMeetingDto, UpdateMembersDto } from 'src/modules/meetings/dto';
+import { CreateMeetingDto } from 'src/modules/meetings/dto';
 import { Meeting } from 'src/modules/meetings/entities';
-import { User } from 'src/modules/users/user.entity';
+import { MemberService } from 'src/modules/meetings/services/member.service';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -10,6 +10,7 @@ export class MeetingsService {
   constructor(
     @InjectRepository(Meeting)
     private readonly meetingsRepository: Repository<Meeting>,
+    private readonly membersService: MemberService,
   ) {}
 
   async getById(id: string) {
@@ -26,18 +27,32 @@ export class MeetingsService {
 
   async create(meetingData: CreateMeetingDto) {
     const { ownerId } = meetingData;
-    const members = [{ id: ownerId } as unknown as User];
-    const meeting = this.meetingsRepository.create({ ownerId, members });
+    const meeting = this.meetingsRepository.create({
+      ownerId,
+      members: [],
+    });
+
     return await this.meetingsRepository.save(meeting);
   }
 
-  async updateMembers(id: string, meetingData: UpdateMembersDto) {
-    const meeting = await this.getById(id);
+  async addMember(meetingId: string, userId: number) {
+    const meeting = await this.getById(meetingId);
 
-    return await this.meetingsRepository.save({
-      ...meeting,
-      members: [...meeting.members, ...meetingData.members],
-    });
+    try {
+      const member = await this.membersService.create({ userId });
+
+      return await this.meetingsRepository.save({
+        ...meeting,
+        members: [...meeting.members, member],
+      });
+    } catch {
+      return meeting;
+    }
+  }
+
+  async deleteMember(meetingId: string, memberId: number) {
+    await this.membersService.delete(memberId);
+    return await this.getById(meetingId);
   }
 
   async endMeeting(id: string) {
