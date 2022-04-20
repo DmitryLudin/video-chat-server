@@ -12,8 +12,8 @@ import {
 
 @Entity()
 export class Member {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Meeting, (meeting) => meeting.members, {
     orphanedRowAction: 'delete',
@@ -27,6 +27,9 @@ export class Member {
   @Column({ nullable: true })
   @Exclude()
   userId: number;
+
+  @Column({ nullable: true })
+  displayName?: string;
 
   @Column({ default: false })
   isAudioOn: boolean;

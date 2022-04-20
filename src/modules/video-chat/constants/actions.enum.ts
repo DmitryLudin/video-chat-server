@@ -5,4 +5,5 @@ export enum VideoChatAction {
   LEAVE_MEETING = 'leave_meeting',
   SEND_MESSAGE = 'send_message',
   MESSAGES = 'messages',
+  EXCEPTION = 'exception',
 }

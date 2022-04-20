@@ -11,32 +11,8 @@ export class MemberService {
     private readonly membersRepository: Repository<Member>,
   ) {}
 
-  async getAllByMeetingId(meetingId: string) {
-    return await this.membersRepository.find({
-      where: { meeting: { id: meetingId } },
-    });
-  }
-
-  async getAllByUserId(userId: number) {
-    return await this.membersRepository.find({
-      where: { user: { id: userId } },
-    });
-  }
-
-  async getById(memberId: number) {
+  async getById(memberId: string) {
     return await this.membersRepository.findOne({ where: { id: memberId } });
-  }
-
-  async getByMeetingId(meetingId: string) {
-    return await this.membersRepository.findOne({
-      where: { meeting: { id: meetingId } },
-    });
-  }
-
-  async getByUserId(userId: number) {
-    return await this.membersRepository.findOne({
-      where: { user: { id: userId } },
-    });
   }
 
   async create(memberData: CreateMemberDto) {
@@ -45,7 +21,7 @@ export class MemberService {
     return this.getById(savedMember.id);
   }
 
-  async delete(memberId: number) {
-    return await this.membersRepository.delete({ id: memberId });
+  async deleteByUserId(userId: number) {
+    return await this.membersRepository.delete({ userId });
   }
 }

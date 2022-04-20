@@ -10,19 +10,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthenticationGuard } from 'src/modules/authentication/guards';
-import { CreateMeetingDto } from 'src/modules/meetings/dto';
+import { CreateMeetingDto, CreateMemberDto } from 'src/modules/meetings/dto';
 import { MeetingsService } from 'src/modules/meetings/services';
 
 @Controller('meetings')
 @UseInterceptors(ClassSerializerInterceptor)
 export class MeetingsController {
   constructor(private readonly meetingsService: MeetingsService) {}
-
-  @UseGuards(JwtAuthenticationGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.meetingsService.getById(id);
-  }
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
@@ -31,10 +25,23 @@ export class MeetingsController {
     return this.meetingsService.create(meetingData);
   }
 
+  @UseGuards(JwtAuthenticationGuard)
+  @Get(':id/:userId')
+  async findOneByUserId(
+    @Param('id') id: string,
+    @Param('userId') userId: number,
+  ) {
+    console.log(id, userId);
+    return this.meetingsService.getByUserId(id, userId);
+  }
+
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post(':id/delete')
-  async delete(@Param('id') id: string) {
-    return this.meetingsService.endMeeting(id);
+  @Post(':id/join-meeting')
+  async joinMeeting(
+    @Param('id') id: string,
+    @Body() meetingData: CreateMemberDto,
+  ) {
+    return this.meetingsService.addMember(id, meetingData);
   }
 }
