@@ -26,13 +26,15 @@ export class MeetingsController {
   }
 
   @UseGuards(JwtAuthenticationGuard)
+  @Get(':id')
+  async getById(@Param('id') meetingId: string) {
+    return this.meetingsService.getById(meetingId);
+  }
+
+  @UseGuards(JwtAuthenticationGuard)
   @Get(':id/:userId')
-  async findOneByUserId(
-    @Param('id') id: string,
-    @Param('userId') userId: number,
-  ) {
-    console.log(id, userId);
-    return this.meetingsService.getByUserId(id, userId);
+  async getByUserId(@Param('id') id: string, @Param('userId') userId: number) {
+    return this.meetingsService.getByIdAndUserId(id, userId);
   }
 
   @HttpCode(200)
@@ -43,5 +45,22 @@ export class MeetingsController {
     @Body() meetingData: CreateMemberDto,
   ) {
     return this.meetingsService.addMember(id, meetingData);
+  }
+
+  @HttpCode(200)
+  @UseGuards(JwtAuthenticationGuard)
+  @Post(':id/leave-meeting')
+  async leaveMeeting(
+    @Param('id') id: string,
+    @Body() meetingData: { userId: number },
+  ) {
+    return this.meetingsService.deleteMember(id, meetingData.userId);
+  }
+
+  @HttpCode(200)
+  @UseGuards(JwtAuthenticationGuard)
+  @Post(':id/end-meeting')
+  async endMeeting(@Param('id') id: string) {
+    return this.meetingsService.endMeeting(id);
   }
 }

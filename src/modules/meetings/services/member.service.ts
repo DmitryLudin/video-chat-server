@@ -15,6 +15,13 @@ export class MemberService {
     return await this.membersRepository.findOne({ where: { id: memberId } });
   }
 
+  async getByUserId(userId: number) {
+    return await this.membersRepository.findOne({
+      where: { userId },
+      relations: ['meeting'],
+    });
+  }
+
   async create(memberData: CreateMemberDto) {
     const member = this.membersRepository.create(memberData);
     const savedMember = await this.membersRepository.save(member);

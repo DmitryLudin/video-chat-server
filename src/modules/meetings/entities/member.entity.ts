@@ -17,6 +17,8 @@ export class Member {
 
   @ManyToOne(() => Meeting, (meeting) => meeting.members, {
     orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   meeting: Meeting;
 

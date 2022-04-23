@@ -18,7 +18,6 @@ export class Meeting {
 
   @ManyToOne(() => User, {
     eager: true,
-    cascade: true,
   })
   @JoinColumn({ name: 'ownerId' })
   owner: User;
@@ -31,7 +30,6 @@ export class Meeting {
     eager: true,
     cascade: true,
   })
-  @JoinColumn()
   members: Member[];
 
   @CreateDateColumn()

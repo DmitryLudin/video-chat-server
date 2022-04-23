@@ -9,7 +9,7 @@ import { PostgresErrorCode } from 'src/modules/database/constants';
 import { CreateMeetingDto, CreateMemberDto } from 'src/modules/meetings/dto';
 import { Meeting } from 'src/modules/meetings/entities';
 import { MemberService } from 'src/modules/meetings/services/member.service';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MeetingsService {
@@ -25,22 +25,41 @@ export class MeetingsService {
     });
 
     if (!meeting) {
-      throw new NotFoundException(`Встреча с таким id ${id} не найдена`);
+      throw new NotFoundException({
+        message: `Встреча с таким id ${id} не найдена`,
+        code: 'meeting_not_found',
+      });
     }
 
     return meeting;
   }
 
-  async getByUserId(meetingId: string, userId: number) {
+  async getByIdAndUserId(meetingId: string, userId: number) {
+    const meeting = await this.getById(meetingId);
+    const member = meeting.members.find((member) => member.userId === userId);
+
+    if (!member) {
+      throw new NotFoundException({
+        message: `Пользователь не является участником встречи`,
+        code: 'user_not_member',
+      });
+    }
+
+    return meeting;
+  }
+
+  async getByUserId(userId: number) {
     const meeting = await this.meetingsRepository.findOne({
       where: {
-        id: meetingId,
         members: { userId },
       },
     });
 
     if (!meeting) {
-      throw new NotFoundException(`Встреча с таким id ${meetingId} не найдена`);
+      throw new NotFoundException({
+        message: `Пользователь не является участником встречи`,
+        code: 'user_not_member',
+      });
     }
 
     return meeting;
@@ -49,21 +68,20 @@ export class MeetingsService {
   async create(meetingData: CreateMeetingDto) {
     const { ownerId } = meetingData;
 
-    const member = await this.membersService.create({ userId: ownerId });
     const meeting = this.meetingsRepository.create({
       ownerId,
-      members: [member],
+      members: [{ userId: ownerId }],
     });
+    const savedMeeting = await this.meetingsRepository.save(meeting);
 
-    return await this.meetingsRepository.save(meeting);
+    return this.getById(savedMeeting.id);
   }
 
   async addMember(meetingId: string, memberData: CreateMemberDto) {
-    let meeting: Meeting;
-
     try {
-      meeting = await this.getById(meetingId);
+      const meeting = await this.getById(meetingId);
       const member = await this.membersService.create(memberData);
+
       return await this.meetingsRepository.save({
         ...meeting,
         members: [...meeting.members, member],
@@ -86,8 +104,15 @@ export class MeetingsService {
   }
 
   async deleteMember(meetingId: string, userId: number) {
-    await this.membersService.deleteByUserId(userId);
-    return await this.getById(meetingId);
+    try {
+      await this.membersService.deleteByUserId(userId);
+      return await this.getById(meetingId);
+    } catch {
+      throw new HttpException(
+        'Что-то пошло не так',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async endMeeting(id: string) {
