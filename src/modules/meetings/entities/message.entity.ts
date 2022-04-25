@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { User } from 'src/modules/users/user.entity';
 import {
   Entity,
@@ -6,13 +7,13 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-  UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 @Entity()
 export class Message {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 250, default: '' })
   text: string;
@@ -21,16 +22,21 @@ export class Message {
   meetingId: string;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'author_id' })
+  @JoinColumn({ name: 'authorId' })
   author: User;
 
-  @ManyToOne(() => Message, { nullable: true })
-  @JoinColumn({ name: 'reply_message_id' })
+  @Column({ nullable: true })
+  @Exclude()
+  authorId: number;
+
+  @OneToOne(() => Message, { nullable: true })
+  @JoinColumn({ name: 'replyMessageId' })
   reply: Message;
+
+  @Column({ nullable: true })
+  @Exclude()
+  replyMessageId: string;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

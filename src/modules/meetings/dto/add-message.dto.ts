@@ -5,7 +5,7 @@ export class AddMessageDto {
   @MaxLength(250)
   text: string;
 
-  @IsNumber()
+  @IsString()
   meetingId: string;
 
   @IsNumber()
