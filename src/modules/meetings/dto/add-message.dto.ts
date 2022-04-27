@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class AddMessageDto {
   @IsString()
@@ -8,8 +8,8 @@ export class AddMessageDto {
   @IsString()
   meetingId: string;
 
-  @IsNumber()
-  userId: number;
+  @IsString()
+  memberId: string;
 
   @IsOptional()
   replyMessageId?: string;

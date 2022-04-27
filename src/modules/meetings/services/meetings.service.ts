@@ -9,6 +9,7 @@ import { PostgresErrorCode } from 'src/modules/database/constants';
 import { CreateMeetingDto, CreateMemberDto } from 'src/modules/meetings/dto';
 import { Meeting } from 'src/modules/meetings/entities';
 import { MemberService } from 'src/modules/meetings/services/member.service';
+import { MessagesService } from 'src/modules/meetings/services/messages.service';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class MeetingsService {
     @InjectRepository(Meeting)
     private readonly meetingsRepository: Repository<Meeting>,
     private readonly membersService: MemberService,
+    private readonly messagesService: MessagesService,
   ) {}
 
   async getById(id: string) {
@@ -116,6 +118,7 @@ export class MeetingsService {
   }
 
   async endMeeting(id: string) {
+    await this.messagesService.deleteAllByMeetingId(id);
     return await this.meetingsRepository.delete({ id });
   }
 }

@@ -11,13 +11,6 @@ export class MessagesService {
     private readonly messagesRepository: Repository<Message>,
   ) {}
 
-  async getById(messageId: string) {
-    return await this.messagesRepository.findOne({
-      where: { id: messageId },
-      relations: ['author', 'reply', 'reply.author'],
-    });
-  }
-
   async getAllByMeetingId(meetingId: string) {
     return await this.messagesRepository.find({
       where: { meetingId },
@@ -27,13 +20,16 @@ export class MessagesService {
   }
 
   async addMessage(messageData: AddMessageDto) {
-    const { userId, ...otherData } = messageData;
+    const { memberId, ...otherData } = messageData;
     const message = this.messagesRepository.create({
       ...otherData,
-      authorId: userId,
+      authorId: memberId,
     });
-    const savedMessage = await this.messagesRepository.save(message);
 
-    return await this.getById(savedMessage.id);
+    return await this.messagesRepository.save(message);
+  }
+
+  async deleteAllByMeetingId(meetingId: string) {
+    return this.messagesRepository.delete({ meetingId });
   }
 }

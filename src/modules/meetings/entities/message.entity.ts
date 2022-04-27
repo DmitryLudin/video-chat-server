@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { User } from 'src/modules/users/user.entity';
+import { Member } from 'src/modules/meetings/entities/member.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -21,13 +21,13 @@ export class Message {
   @Column()
   meetingId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => Member)
   @JoinColumn({ name: 'authorId' })
-  author: User;
+  author: Member;
 
   @Column({ nullable: true })
   @Exclude()
-  authorId: number;
+  authorId: string;
 
   @OneToOne(() => Message, { nullable: true })
   @JoinColumn({ name: 'replyMessageId' })
