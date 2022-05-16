@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostgresErrorCode } from 'src/modules/database/constants';
+import { MediasoupService } from 'src/modules/mediasoup/mediasoup.service';
 import { CreateMeetingDto, CreateMemberDto } from 'src/modules/meetings/dto';
 import { Meeting } from 'src/modules/meetings/entities';
 import { MemberService } from 'src/modules/meetings/services/member.service';
@@ -19,6 +20,7 @@ export class MeetingsService {
     private readonly meetingsRepository: Repository<Meeting>,
     private readonly membersService: MemberService,
     private readonly messagesService: MessagesService,
+    private readonly mediasoupService: MediasoupService,
   ) {}
 
   async getById(id: string) {
@@ -50,6 +52,23 @@ export class MeetingsService {
     return meeting;
   }
 
+  async getByMemberId(memberId: string) {
+    const meeting = await this.meetingsRepository.findOne({
+      where: {
+        members: { id: memberId },
+      },
+    });
+
+    if (!meeting) {
+      throw new NotFoundException({
+        message: `Пользователь не является участником встречи`,
+        code: 'user_not_member',
+      });
+    }
+
+    return meeting;
+  }
+
   async getByUserId(userId: number) {
     const meeting = await this.meetingsRepository.findOne({
       where: {
@@ -69,9 +88,11 @@ export class MeetingsService {
 
   async create(meetingData: CreateMeetingDto) {
     const { ownerId } = meetingData;
+    const webRtcRouter = await this.mediasoupService.createRouter();
 
     const meeting = this.meetingsRepository.create({
       ownerId,
+      webRtcRouter,
       members: [{ userId: ownerId }],
     });
     const savedMeeting = await this.meetingsRepository.save(meeting);

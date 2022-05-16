@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { MeetingModule } from 'src/modules/meetings/meeting.module';
 import { VideoChatModule } from 'src/modules/video-chat/video-chat.module';
+import { MediasoupModule } from './mediasoup/mediasoup.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { VideoChatModule } from 'src/modules/video-chat/video-chat.module';
     AuthenticationModule,
     MeetingModule,
     VideoChatModule,
+    MediasoupModule,
   ],
   controllers: [],
 })

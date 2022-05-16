@@ -1,4 +1,8 @@
 import { Exclude } from 'class-transformer';
+import { Consumer } from 'mediasoup/node/lib/Consumer';
+import { Producer } from 'mediasoup/node/lib/Producer';
+import { Transport } from 'mediasoup/node/lib/Transport';
+import { WebRtcTransport } from 'mediasoup/node/lib/WebRtcTransport';
 import { Meeting } from 'src/modules/meetings/entities/meeting.entity';
 import { User } from 'src/modules/users/user.entity';
 import {
@@ -41,4 +45,20 @@ export class Member {
 
   @Column({ default: false })
   isSpeaking: boolean;
+
+  @Column(() => WebRtcTransport)
+  @Exclude()
+  webRtcProduceTransport?: WebRtcTransport;
+
+  @Column(() => WebRtcTransport)
+  @Exclude()
+  webRtcConsumeTransport?: WebRtcTransport;
+
+  @Column(() => Producer)
+  @Exclude()
+  producer?: Producer;
+
+  @Column(() => Consumer)
+  @Exclude()
+  consumer?: Consumer;
 }

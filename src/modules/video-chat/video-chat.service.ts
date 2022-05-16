@@ -6,8 +6,15 @@ import { AuthenticationService } from 'src/modules/authentication/authentication
 import { AddMessageDto } from 'src/modules/meetings/dto';
 import {
   MeetingsService,
+  MemberService,
   MessagesService,
 } from 'src/modules/meetings/services';
+import {
+  ConnectWebRtcTransportDto,
+  CreateConsumerDto,
+  CreateProducerDto,
+  CreateWebRtcTransportDto,
+} from 'src/modules/video-chat/dto';
 
 @Injectable()
 export class VideoChatService {
@@ -15,6 +22,7 @@ export class VideoChatService {
     private readonly authenticationService: AuthenticationService,
     private readonly meetingsService: MeetingsService,
     private readonly messagesService: MessagesService,
+    private readonly membersService: MemberService,
   ) {}
 
   async connect(client: Socket) {
@@ -61,6 +69,57 @@ export class VideoChatService {
       );
     } catch (error) {
       console.log('add message', error);
+      throw new WsException(error as object);
+    }
+  }
+
+  async createWebRtcTransport(
+    client: Socket,
+    { memberId, isConsumeTransport }: CreateWebRtcTransportDto,
+  ) {
+    try {
+      const meeting = await this.meetingsService.getByMemberId(memberId);
+
+      return await this.membersService.createWebRtcTransport(memberId, {
+        webRtcRouter: meeting.webRtcRouter,
+        isConsumeTransport,
+      });
+    } catch (error) {
+      console.log('create webrtc transport', error);
+      throw new WsException(error as object);
+    }
+  }
+
+  async connectWebRtcTransport(
+    client: Socket,
+    { memberId, ...others }: ConnectWebRtcTransportDto,
+  ) {
+    try {
+      return await this.membersService.connectWebRtcTransport(memberId, others);
+    } catch (error) {
+      console.log('connect webrtc transport', error);
+      throw new WsException(error as object);
+    }
+  }
+
+  async produce(client: Socket, { memberId, ...others }: CreateProducerDto) {
+    try {
+      const member = await this.membersService.produce(memberId, others);
+
+      return member.producer;
+    } catch (error) {
+      console.log('create producer', error);
+      throw new WsException(error as object);
+    }
+  }
+
+  async consume(client: Socket, { memberId, ...others }: CreateConsumerDto) {
+    try {
+      const member = await this.membersService.consume(memberId, others);
+
+      return member.consumer;
+    } catch (error) {
+      console.log('create consumer', error);
       throw new WsException(error as object);
     }
   }

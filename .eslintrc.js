@@ -26,6 +26,8 @@ module.exports = {
     'import/no-unresolved': 'off',
     'import/no-cycle': 'error',
     'unicorn/prefer-module': 'off',
-    'unicorn/no-null': 'off'
+    'unicorn/no-null': 'off',
+    'unicorn/numeric-separators-style': 'off',
+    'unicorn/no-array-for-each': 'warn'
   },
 };

@@ -10,6 +10,7 @@ import {
   Column,
   OneToMany,
 } from 'typeorm';
+import { Router } from 'mediasoup/node/lib/Router';
 
 @Entity()
 export class Meeting {
@@ -31,6 +32,10 @@ export class Meeting {
     cascade: true,
   })
   members: Member[];
+
+  @Column(() => Router)
+  @Exclude()
+  webRtcRouter: Router;
 
   @CreateDateColumn()
   createdAt: Date;
