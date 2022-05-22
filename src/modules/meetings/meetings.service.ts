@@ -6,8 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostgresErrorCode } from 'src/modules/database/constants';
-import { MediasoupService } from 'src/modules/mediasoup/mediasoup.service';
-import { CreateMeetingDto, CreateMemberDto } from 'src/modules/meetings/dto';
+import {
+  AddMessageDto,
+  CreateMeetingDto,
+  CreateMemberDto,
+} from 'src/modules/meetings/dto';
 import { Meeting } from 'src/modules/meetings/entities';
 import { MemberService } from 'src/modules/meetings/services/member.service';
 import { MessagesService } from 'src/modules/meetings/services/messages.service';
@@ -20,9 +23,9 @@ export class MeetingsService {
     private readonly meetingsRepository: Repository<Meeting>,
     private readonly membersService: MemberService,
     private readonly messagesService: MessagesService,
-    private readonly mediasoupService: MediasoupService,
   ) {}
 
+  // Meeting methods
   async getById(id: string) {
     const meeting = await this.meetingsRepository.findOne({
       where: { id },
@@ -88,27 +91,44 @@ export class MeetingsService {
 
   async create(meetingData: CreateMeetingDto) {
     const { ownerId } = meetingData;
-    const webRtcRouter = await this.mediasoupService.createRouter();
 
     const meeting = this.meetingsRepository.create({
       ownerId,
-      webRtcRouter,
       members: [{ userId: ownerId }],
     });
-    const savedMeeting = await this.meetingsRepository.save(meeting);
+    await this.meetingsRepository.save(meeting);
 
-    return this.getById(savedMeeting.id);
+    return this.getById(meeting.id);
   }
 
+  async endMeeting(id: string) {
+    await this.messagesService.deleteAllByMeetingId(id);
+    return await this.meetingsRepository.delete({ id });
+  }
+
+  // Messages methods
+  async getAllMessages(meetingId: string) {
+    return await this.messagesService.getAllByMeetingId(meetingId);
+  }
+
+  async addMessage(addMessageData: AddMessageDto) {
+    await this.messagesService.addMessage(addMessageData);
+
+    return await this.messagesService.getAllByMeetingId(
+      addMessageData.meetingId,
+    );
+  }
+
+  // Member methods
   async addMember(meetingId: string, memberData: CreateMemberDto) {
     try {
       const meeting = await this.getById(meetingId);
-      const member = await this.membersService.create(memberData);
-
-      return await this.meetingsRepository.save({
+      const savedMeeting = await this.meetingsRepository.save({
         ...meeting,
-        members: [...meeting.members, member],
+        members: [...meeting.members, memberData],
       });
+
+      return this.getById(savedMeeting.id);
     } catch (error: unknown) {
       const postgresError = error as { code?: string };
 
@@ -136,10 +156,5 @@ export class MeetingsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-  }
-
-  async endMeeting(id: string) {
-    await this.messagesService.deleteAllByMeetingId(id);
-    return await this.meetingsRepository.delete({ id });
   }
 }

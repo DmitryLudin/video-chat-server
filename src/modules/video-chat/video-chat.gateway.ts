@@ -12,21 +12,12 @@ import {
 import { instanceToPlain } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
 import { cors } from 'src/constants/cors';
-import { MediasoupService } from 'src/modules/mediasoup/mediasoup.service';
 import { AddMessageDto } from 'src/modules/meetings/dto';
 import { Message } from 'src/modules/meetings/entities';
-import {
-  CreateWebRtcTransportDto,
-  ConnectWebRtcTransportDto,
-  CreateProducerDto,
-  CreateConsumerDto,
-} from 'src/modules/video-chat/dto';
-import {
-  ICreateConsumerOptions,
-  IWebrtcTransportOptions,
-} from 'src/modules/video-chat/types';
+import { TProducerId } from 'src/modules/video-chat/types';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 import { VideoChatAction } from 'src/modules/video-chat/constants/actions.enum';
+import { WebRtcService } from 'src/modules/webrtc/webrtc.service';
 
 @WebSocketGateway({
   cors,
@@ -39,25 +30,37 @@ export class VideoChatGateway
 
   constructor(
     private readonly videoChatService: VideoChatService,
-    private readonly mediasoupServce: MediasoupService,
+    private readonly webRtcService: WebRtcService,
   ) {
-    mediasoupServce.createWorkers().then();
+    webRtcService
+      .createWorkers()
+      .then(() => console.log('workers created'))
+      .catch((error) => console.log(error));
   }
 
   async handleConnection(client: Socket) {
     try {
-      const { meeting, messages } = await this.videoChatService.connect(client);
+      const {
+        meeting,
+        messages,
+        webRtcRouter,
+        transportProduceData,
+        transportConsumeData,
+      } = await this.videoChatService.connect(client);
 
       client.join(meeting.id);
       client.to(meeting.id).emit(VideoChatAction.MEMBERS, {
-        meeting: this.deserializeData(meeting.members),
+        meeting: this.deserializeData(meeting),
       });
       client.emit(VideoChatAction.JOIN_MEETING, {
         meeting: this.deserializeData(meeting),
         messages: this.deserializeData(messages),
-        routerRtpCapabilities: meeting.webRtcRouter.rtpCapabilities,
+        routerRtpCapabilities: webRtcRouter.rtpCapabilities,
+        transportProduceData,
+        transportConsumeData,
       });
     } catch (error) {
+      console.log(error);
       client.emit(VideoChatAction.ERROR, {
         error,
       });
@@ -110,90 +113,20 @@ export class VideoChatGateway
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.CREATE_WEBRTC_TRANSPORT)
-  async handleCreateWebRtcTransport(
-    @MessageBody() createWebRtcTransportData: CreateWebRtcTransportDto,
+  @SubscribeMessage(VideoChatAction.NEW_PRODUCERS)
+  async handelNewProducers(
+    @MessageBody() data: { meetingId: string },
     @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ transportOptions: IWebrtcTransportOptions }>> {
-    const { id, iceParameters, iceCandidates, dtlsParameters } =
-      await this.videoChatService.createWebRtcTransport(
-        client,
-        createWebRtcTransportData,
-      );
+  ): Promise<WsResponse<{ producers: Array<{ id: TProducerId }> }>> {
+    const producers = this.videoChatService.getProducers(data.meetingId);
 
-    console.log('create webrtc transport', client.id);
+    console.log('get producer ids', client.id);
+    client.to(data.meetingId).emit(VideoChatAction.NEW_PRODUCERS, {
+      producers,
+    });
     return {
-      event: VideoChatAction.CREATE_WEBRTC_TRANSPORT,
-      data: {
-        transportOptions: { id, iceParameters, iceCandidates, dtlsParameters },
-      },
-    };
-  }
-
-  @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.CONNECT_WEBRTC_TRANSPORT)
-  async handleConnectWebRtcTransport(
-    @MessageBody() connectWebRtcTransportData: ConnectWebRtcTransportDto,
-    @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ connected: boolean }>> {
-    await this.videoChatService.connectWebRtcTransport(
-      client,
-      connectWebRtcTransportData,
-    );
-
-    console.log('connect webrtc transport', client.id);
-    return {
-      event: VideoChatAction.CONNECT_WEBRTC_TRANSPORT,
-      data: {
-        connected: true,
-      },
-    };
-  }
-
-  @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.CREATE_PRODUCER)
-  async handleProduce(
-    @MessageBody() createProducerData: CreateProducerDto,
-    @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ producerId: string }>> {
-    const producer = await this.videoChatService.produce(
-      client,
-      createProducerData,
-    );
-
-    console.log('create producer', client.id);
-    return {
-      event: VideoChatAction.CREATE_PRODUCER,
-      data: {
-        producerId: producer.id,
-      },
-    };
-  }
-
-  @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.CREATE_CONSUMER)
-  async handleConsume(
-    @MessageBody() createConsumerData: CreateConsumerDto,
-    @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ consumerOptions: ICreateConsumerOptions }>> {
-    const consumer = await this.videoChatService.consume(
-      client,
-      createConsumerData,
-    );
-
-    console.log('create consumer', client.id);
-    return {
-      event: VideoChatAction.CREATE_CONSUMER,
-      data: {
-        consumerOptions: {
-          producerId: consumer.producerId,
-          consumerId: consumer.id,
-          kind: consumer.kind,
-          rtpParameters: consumer.rtpParameters,
-          type: consumer.type,
-          producerPaused: consumer.producerPaused,
-        },
-      },
+      event: VideoChatAction.NEW_PRODUCERS,
+      data: { producers },
     };
   }
 

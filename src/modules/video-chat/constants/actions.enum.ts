@@ -6,8 +6,5 @@ export enum VideoChatAction {
   MESSAGES = 'messages',
   MEMBERS = 'members',
   ERROR = 'error',
-  CREATE_WEBRTC_TRANSPORT = 'create_webrtc_transport',
-  CONNECT_WEBRTC_TRANSPORT = 'connect_webrtc_transport',
-  CREATE_PRODUCER = 'create_producer',
-  CREATE_CONSUMER = 'create_consumer',
+  NEW_PRODUCERS = 'new_producers',
 }

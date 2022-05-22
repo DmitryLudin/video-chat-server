@@ -3,23 +3,23 @@ import { Router, RouterOptions } from 'mediasoup/node/lib/Router';
 import * as mediasoup from 'mediasoup';
 import { WebRtcTransport } from 'mediasoup/node/lib/WebRtcTransport';
 import { Worker, WorkerSettings } from 'mediasoup/node/lib/Worker';
-import { videoChatConfig } from 'src/constants/video-chat-config';
-import { ConsumeDto, ProduceDto } from 'src/modules/mediasoup/dto';
+import { webRtcConfig } from 'src/modules/webrtc/constants';
+import { ConsumeDto, ProduceDto } from 'src/modules/webrtc/dto';
 
 @Injectable()
-export class MediasoupService {
+export class WebRtcService {
   workers: Worker[] = [];
   nextWorkerIndex = 0;
 
   async createWorkers() {
-    const { numWorkers } = videoChatConfig.mediasoup;
+    const { numWorkers } = webRtcConfig.mediasoup;
 
     for (let i = 0; i < numWorkers; i++) {
       const worker = await mediasoup.createWorker({
-        logLevel: videoChatConfig.mediasoup.worker.logLevel,
-        logTags: videoChatConfig.mediasoup.worker.logTags,
-        rtcMinPort: videoChatConfig.mediasoup.worker.rtcMinPort,
-        rtcMaxPort: videoChatConfig.mediasoup.worker.rtcMaxPort,
+        logLevel: webRtcConfig.mediasoup.worker.logLevel,
+        logTags: webRtcConfig.mediasoup.worker.logTags,
+        rtcMinPort: webRtcConfig.mediasoup.worker.rtcMinPort,
+        rtcMaxPort: webRtcConfig.mediasoup.worker.rtcMaxPort,
       } as WorkerSettings);
 
       worker.on('died', () => {
@@ -35,16 +35,16 @@ export class MediasoupService {
 
   async createRouter() {
     const worker = this.getMediasoupWorker();
-    const mediaCodecs = videoChatConfig.mediasoup.router.mediaCodecs;
+    const mediaCodecs = webRtcConfig.mediasoup.router.mediaCodecs;
 
-    return worker
+    return await worker
       .createRouter({ mediaCodecs } as RouterOptions)
       .then((router) => router);
   }
 
   async createWebRtcTransport(router: Router) {
     const { maxIncomingBitrate, initialAvailableOutgoingBitrate, listenIps } =
-      videoChatConfig.mediasoup.webRtcTransport;
+      webRtcConfig.mediasoup.webRtcTransport;
 
     const transport = await router.createWebRtcTransport({
       listenIps,

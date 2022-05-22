@@ -6,7 +6,7 @@ import { cors } from 'src/constants/cors';
 import { AppModule } from 'src/modules/app.module';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import { runInCluster } from 'src/utils/run-in-cluster.util';
+import { runInCluster } from 'src/utils';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

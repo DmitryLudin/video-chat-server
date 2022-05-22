@@ -1,7 +1,7 @@
 import * as os from 'node:os';
-import { getLocalIp } from 'src/utils/get-local-ip';
+import { getLocalIp } from 'src/utils';
 
-export const videoChatConfig = {
+export const webRtcConfig = {
   mediasoup: {
     // Worker settings
     numWorkers: Object.keys(os.cpus()).length,

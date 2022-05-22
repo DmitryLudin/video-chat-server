@@ -1,5 +1,5 @@
-import { ProduceDto } from 'src/modules/mediasoup/dto';
+import { ProduceDto } from 'src/modules/webrtc/dto';
 
-export class CreateProducerDto extends ProduceDto {
+export class CreateWebRtcProducerDto extends ProduceDto {
   memberId: string;
 }
