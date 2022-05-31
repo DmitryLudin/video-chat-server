@@ -6,7 +6,7 @@ export class AddMessageDto {
   text: string;
 
   @IsString()
-  meetingId: string;
+  roomId: string;
 
   @IsString()
   memberId: string;

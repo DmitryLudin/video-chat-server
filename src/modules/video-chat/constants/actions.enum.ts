@@ -1,7 +1,7 @@
 export enum VideoChatAction {
-  JOIN_MEETING = 'join_meeting',
-  END_MEETING = 'end_meeting',
-  LEAVE_MEETING = 'leave_meeting',
+  JOIN_ROOM = 'join_room',
+  CLOSE_ROOM = 'close_room',
+  LEAVE_ROOM = 'leave_room',
   SEND_MESSAGE = 'send_message',
   MESSAGES = 'messages',
   MEMBERS = 'members',

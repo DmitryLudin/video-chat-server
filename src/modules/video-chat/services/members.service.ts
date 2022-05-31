@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateMemberDto } from 'src/modules/meetings/dto';
-import { Member } from 'src/modules/meetings/entities';
+import { CreateMemberDto } from 'src/modules/video-chat/dto';
+import { Member } from 'src/modules/video-chat/entities';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class MemberService {
+export class MembersService {
   constructor(
     @InjectRepository(Member)
     private readonly membersRepository: Repository<Member>,

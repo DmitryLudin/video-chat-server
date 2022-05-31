@@ -1,5 +1,9 @@
-import { ConsumeDto } from 'src/modules/webrtc/dto';
+import { RtpCapabilities } from 'mediasoup/node/lib/RtpParameters';
 
-export class CreateConsumerDto extends ConsumeDto {
+export class CreateWebRtcConsumerDto {
   memberId: string;
+  transportId: string;
+  producerId: string;
+  rtpCapabilities: RtpCapabilities;
+  paused = true;
 }

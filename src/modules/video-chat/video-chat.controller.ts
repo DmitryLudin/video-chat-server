@@ -10,10 +10,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthenticationGuard } from 'src/modules/authentication/guards';
-import { CreateMeetingDto, CreateMemberDto } from 'src/modules/meetings/dto';
 import {
+  CreateMemberDto,
+  CreateRoomDto,
   ConnectWebRtcTransportDto,
-  CreateConsumerDto,
+  CreateWebRtcConsumerDto,
   CreateWebRtcProducerDto,
 } from 'src/modules/video-chat/dto';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
@@ -23,55 +24,32 @@ import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 export class VideoChatController {
   constructor(private readonly videoChatService: VideoChatService) {}
 
-  @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/create')
-  async create(@Body() meetingData: CreateMeetingDto) {
-    return this.videoChatService.createMeeting(meetingData);
-  }
-
-  @UseGuards(JwtAuthenticationGuard)
-  @Get('meeting/:id')
-  async getMeetingById(@Param('id') meetingId: string) {
-    return this.videoChatService.getMeeting(meetingId);
-  }
-
-  @UseGuards(JwtAuthenticationGuard)
-  @Get('meeting/:id/:userId')
-  async getByUserId(@Param('id') id: string, @Body('userId') userId: number) {
-    return this.videoChatService.checkUserJoinedMeeting(id, userId);
-  }
-
-  @HttpCode(200)
-  @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/:id/join')
-  async joinMeeting(
+  @Get('room/:id/:userId')
+  async getRoomByIdAndUserId(
     @Param('id') id: string,
-    @Body() meetingData: CreateMemberDto,
+    @Body('userId') userId: number,
   ) {
-    return this.videoChatService.joinMeeting(id, meetingData);
+    return this.videoChatService.getRoomByIdAndUserId(id, userId);
   }
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/:id/leave')
-  async leaveMeeting(
-    @Param('id') id: string,
-    @Body() meetingData: { userId: number },
-  ) {
-    return this.videoChatService.leaveMeeting(id, meetingData.userId);
+  @Post('room/create')
+  async create(@Body() data: CreateRoomDto) {
+    return this.videoChatService.createRoom(data);
   }
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/:id/end')
-  async endMeeting(@Param('id') id: string) {
-    return this.videoChatService.endMeeting(id);
+  @Post('room/:id/join')
+  async joinRoom(@Param('id') id: string, @Body() data: CreateMemberDto) {
+    return this.videoChatService.joinRoom(id, data);
   }
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/:id/connect-transport')
+  @Post('room/:id/connect-transport')
   async connectWebRtcTransport(
     @Param('id') id: string,
     @Body() data: ConnectWebRtcTransportDto,
@@ -81,7 +59,7 @@ export class VideoChatController {
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/:id/create-producer')
+  @Post('room/:id/create-producer')
   async webRtcTransportProduce(
     @Param('id') id: string,
     @Body() data: CreateWebRtcProducerDto,
@@ -93,13 +71,13 @@ export class VideoChatController {
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('meeting/:id/create-consumer')
+  @Post('room/:id/create-consumer')
   async webRtcTransportConsume(
-    @Param('id') meetingId: string,
-    @Body() data: CreateConsumerDto,
+    @Param('id') roomId: string,
+    @Body() data: CreateWebRtcConsumerDto,
   ) {
     const { id, kind, rtpParameters } =
-      await this.videoChatService.createWebRtcConsumer(meetingId, data);
+      await this.videoChatService.createWebRtcConsumer(roomId, data);
 
     return { id, kind, rtpParameters };
   }

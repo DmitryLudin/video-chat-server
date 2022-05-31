@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { Member } from 'src/modules/meetings/entities/member.entity';
+import { Member } from 'src/modules/video-chat/entities/member.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -19,7 +19,7 @@ export class Message {
   text: string;
 
   @Column()
-  meetingId: string;
+  roomId: string;
 
   @ManyToOne(() => Member)
   @JoinColumn({ name: 'authorId' })

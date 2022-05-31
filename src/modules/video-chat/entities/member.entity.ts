@@ -1,6 +1,6 @@
 import { Exclude } from 'class-transformer';
-import { Meeting } from 'src/modules/meetings/entities/meeting.entity';
 import { User } from 'src/modules/users/user.entity';
+import { Room } from 'src/modules/video-chat/entities/room.entity';
 import {
   Column,
   Entity,
@@ -15,12 +15,12 @@ export class Member {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Meeting, (meeting) => meeting.members, {
+  @ManyToOne(() => Room, (room) => room.members, {
     orphanedRowAction: 'delete',
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  meeting: Meeting;
+  room: Room;
 
   @OneToOne(() => User, { eager: true })
   @JoinColumn({ name: 'userId' })

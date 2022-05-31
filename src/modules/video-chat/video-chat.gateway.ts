@@ -12,12 +12,10 @@ import {
 import { instanceToPlain } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
 import { cors } from 'src/constants/cors';
-import { AddMessageDto } from 'src/modules/meetings/dto';
-import { Message } from 'src/modules/meetings/entities';
-import { TProducerId } from 'src/modules/video-chat/types';
+import { AddMessageDto } from 'src/modules/video-chat/dto';
+import { Message } from 'src/modules/video-chat/entities';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 import { VideoChatAction } from 'src/modules/video-chat/constants/actions.enum';
-import { WebRtcService } from 'src/modules/webrtc/webrtc.service';
 
 @WebSocketGateway({
   cors,
@@ -28,37 +26,23 @@ export class VideoChatGateway
   @WebSocketServer()
   server: Server;
 
-  constructor(
-    private readonly videoChatService: VideoChatService,
-    private readonly webRtcService: WebRtcService,
-  ) {
-    webRtcService
-      .createWorkers()
-      .then(() => console.log('workers created'))
-      .catch((error) => console.log(error));
-  }
+  constructor(private readonly videoChatService: VideoChatService) {}
 
   async handleConnection(client: Socket) {
     try {
-      const {
-        meeting,
-        messages,
-        webRtcRouter,
-        transportProduceData,
-        transportConsumeData,
-      } = await this.videoChatService.connect(client);
+      const { room, messages, mediaData } = await this.videoChatService.connect(
+        client,
+      );
 
-      client.join(meeting.id);
-      client.to(meeting.id).emit(VideoChatAction.MEMBERS, {
-        meeting: this.deserializeData(meeting),
+      client.to(room.id).emit(VideoChatAction.MEMBERS, {
+        room: this.deserializeData(room),
       });
-      client.emit(VideoChatAction.JOIN_MEETING, {
-        meeting: this.deserializeData(meeting),
+      client.emit(VideoChatAction.JOIN_ROOM, {
+        room: this.deserializeData(room),
         messages: this.deserializeData(messages),
-        routerRtpCapabilities: webRtcRouter.rtpCapabilities,
-        transportProduceData,
-        transportConsumeData,
+        mediaData,
       });
+      client.join(room.id);
     } catch (error) {
       console.log(error);
       client.emit(VideoChatAction.ERROR, {
@@ -70,19 +54,19 @@ export class VideoChatGateway
 
   async handleDisconnect(client: Socket) {
     try {
-      const { isMeetingOver, meeting } = await this.videoChatService.disconnect(
+      const { isRoomClosed, room } = await this.videoChatService.disconnect(
         client,
       );
-      client.leave(meeting.id);
+      client.leave(room.id);
 
-      if (isMeetingOver) {
-        return client.to(meeting.id).emit(VideoChatAction.END_MEETING, {
-          isMeetingOver: true,
+      if (isRoomClosed) {
+        return client.to(room.id).emit(VideoChatAction.CLOSE_ROOM, {
+          isRoomClosed: true,
         });
       }
 
-      return client.to(meeting.id).emit(VideoChatAction.LEAVE_MEETING, {
-        meeting: this.deserializeData(meeting),
+      return client.to(room.id).emit(VideoChatAction.LEAVE_ROOM, {
+        room: this.deserializeData(room),
       });
     } catch (error) {
       client.emit(VideoChatAction.ERROR, {
@@ -103,7 +87,7 @@ export class VideoChatGateway
     );
 
     console.log('add message', client.id);
-    client.to(addMessageData.meetingId).emit(VideoChatAction.MESSAGES, {
+    client.to(addMessageData.roomId).emit(VideoChatAction.MESSAGES, {
       messages: this.deserializeData(messages),
     });
     return {
@@ -112,23 +96,23 @@ export class VideoChatGateway
     };
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.NEW_PRODUCERS)
-  async handelNewProducers(
-    @MessageBody() data: { meetingId: string },
-    @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ producers: Array<{ id: TProducerId }> }>> {
-    const producers = this.videoChatService.getProducers(data.meetingId);
-
-    console.log('get producer ids', client.id);
-    client.to(data.meetingId).emit(VideoChatAction.NEW_PRODUCERS, {
-      producers,
-    });
-    return {
-      event: VideoChatAction.NEW_PRODUCERS,
-      data: { producers },
-    };
-  }
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @SubscribeMessage(VideoChatAction.NEW_PRODUCERS)
+  // async handelNewProducers(
+  //   @MessageBody() data: { meetingId: string },
+  //   @ConnectedSocket() client: Socket,
+  // ): Promise<WsResponse<{ producers: Array<{ id: TProducerId }> }>> {
+  //   const producers = this.videoChatService.getProducers(data.meetingId);
+  //
+  //   console.log('get producer ids', client.id);
+  //   client.to(data.meetingId).emit(VideoChatAction.NEW_PRODUCERS, {
+  //     producers,
+  //   });
+  //   return {
+  //     event: VideoChatAction.NEW_PRODUCERS,
+  //     data: { producers },
+  //   };
+  // }
 
   private deserializeData<T extends object>(data: T): T {
     return instanceToPlain(data) as T;

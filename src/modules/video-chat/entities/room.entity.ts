@@ -1,6 +1,6 @@
 import { Exclude } from 'class-transformer';
-import { Member } from 'src/modules/meetings/entities/member.entity';
 import { User } from 'src/modules/users/user.entity';
+import { Member } from 'src/modules/video-chat/entities/member.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Meeting {
+export class Room {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -26,7 +26,7 @@ export class Meeting {
   @Exclude()
   ownerId: number;
 
-  @OneToMany(() => Member, (member) => member.meeting, {
+  @OneToMany(() => Member, (member) => member.room, {
     eager: true,
     cascade: true,
   })

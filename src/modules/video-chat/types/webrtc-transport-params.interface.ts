@@ -4,7 +4,7 @@ import {
   IceParameters,
 } from 'mediasoup/node/lib/WebRtcTransport';
 
-export interface IWebrtcTransportOptions {
+export interface IWebrtcTransportParams {
   id: string;
   iceParameters: IceParameters;
   iceCandidates: IceCandidate[];

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AddMessageDto } from 'src/modules/meetings/dto';
-import { Message } from 'src/modules/meetings/entities';
+import { AddMessageDto } from 'src/modules/video-chat/dto';
+import { Message } from 'src/modules/video-chat/entities';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -11,9 +11,9 @@ export class MessagesService {
     private readonly messagesRepository: Repository<Message>,
   ) {}
 
-  async getAllByMeetingId(meetingId: string) {
+  async getAllByRoomId(roomId: string) {
     return await this.messagesRepository.find({
-      where: { meetingId },
+      where: { roomId },
       relations: ['author', 'reply', 'reply.author'],
       order: { createdAt: 'ASC' },
     });
@@ -29,7 +29,7 @@ export class MessagesService {
     return await this.messagesRepository.save(message);
   }
 
-  async deleteAllByMeetingId(meetingId: string) {
-    return this.messagesRepository.delete({ meetingId });
+  async deleteAllByRoomId(roomId: string) {
+    return this.messagesRepository.delete({ roomId });
   }
 }

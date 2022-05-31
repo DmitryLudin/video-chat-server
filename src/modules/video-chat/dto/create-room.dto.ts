@@ -1,6 +1,6 @@
 import { IsNumber } from 'class-validator';
 
-export class CreateMeetingDto {
+export class CreateRoomDto {
   @IsNumber()
   readonly ownerId: number;
 }

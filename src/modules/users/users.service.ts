@@ -12,12 +12,6 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async getByIds(ids: number[]) {
-    return await this.usersRepository.find({
-      where: { id: In(ids) },
-    });
-  }
-
   async getById(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
 
