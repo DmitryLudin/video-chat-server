@@ -5,11 +5,11 @@ import { Socket } from 'socket.io';
 import { AuthenticationService } from 'src/modules/authentication/authentication.service';
 import {
   AddMessageDto,
-  ConnectWebRtcTransportDto,
+  ConnectMediaStreamDto,
   CreateMemberDto,
   CreateRoomDto,
-  CreateWebRtcConsumerDto,
-  CreateWebRtcProducerDto,
+  ReceiveTrackDto,
+  SendTrackDto,
 } from 'src/modules/video-chat/dto';
 import {
   MessagesService,
@@ -51,19 +51,16 @@ export class VideoChatService {
     return room;
   }
 
-  async connectWebRtcTransport(
-    roomId: string,
-    data: ConnectWebRtcTransportDto,
-  ) {
+  async connectMediaStream(roomId: string, data: ConnectMediaStreamDto) {
     return this.roomsMediaDataService.connectPeerTransport(roomId, data);
   }
 
-  async createWebRtcProducer(roomId: string, data: CreateWebRtcProducerDto) {
-    return this.roomsMediaDataService.createPeerProducer(roomId, data);
+  async sendTrack(roomId: string, data: SendTrackDto) {
+    return this.roomsMediaDataService.createSendingStreamTrack(roomId, data);
   }
 
-  async createWebRtcConsumer(roomId: string, data: CreateWebRtcConsumerDto) {
-    return this.roomsMediaDataService.createPeerConsumer(roomId, data);
+  async receiveTrack(roomId: string, data: ReceiveTrackDto) {
+    return this.roomsMediaDataService.createReceivingStreamTrack(roomId, data);
   }
 
   // Методы для транспорта сокетов
@@ -80,8 +77,8 @@ export class VideoChatService {
         messages,
         mediaData: {
           routerRtpCapabilities:
-            this.roomsMediaDataService.getRouterRtpCapabilities(room.id),
-          transports: this.roomsMediaDataService.getTransports(
+            this.roomsMediaDataService.getRoomRouterRtpCapabilities(room.id),
+          transports: this.roomsMediaDataService.getMemberTransports(
             room.id,
             member.id,
           ),
@@ -97,10 +94,12 @@ export class VideoChatService {
     try {
       const user = await this.getUserFromSocket(client);
       const room = await this.roomsService.getByUserId(user.id);
+      const member = room.members.find((member) => member.user.id === user.id);
       console.log('disconnect', client.id);
 
       if (room.ownerId === user.id) {
         await this.roomsService.delete(room.id);
+        this.roomsMediaDataService.delete(room.id);
         return { isRoomClosed: true, room };
       }
 
@@ -108,6 +107,7 @@ export class VideoChatService {
         room.id,
         user.id,
       );
+      this.roomsMediaDataService.deletePeer(room.id, member.id);
       return { room: updatedRoom };
     } catch (error) {
       console.log('disconnect', error);
@@ -126,21 +126,11 @@ export class VideoChatService {
     }
   }
 
-  // getProducers(meetingId: string) {
-  //   const { members } = this._videoChatStore.get(meetingId);
-  //   const producerIds: Array<{ id: string }> = [];
-  //
-  //   for (const memberId in members) {
-  //     const member = members[memberId];
-  //
-  //     member.producers.forEach((producer) => {
-  //       producerIds.push({ id: producer.id });
-  //     });
-  //   }
-  //
-  //   return producerIds;
-  // }
+  getProducers(roomId: string) {
+    return this.roomsMediaDataService.getProducers(roomId);
+  }
 
+  // Приватные методы
   private async getUserFromSocket(socket: Socket) {
     const cookie = socket.handshake.headers.cookie;
     const { Authentication: authenticationToken } = parse(cookie);

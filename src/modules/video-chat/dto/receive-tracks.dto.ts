@@ -1,6 +1,6 @@
 import { RtpCapabilities } from 'mediasoup/node/lib/RtpParameters';
 
-export class CreateWebRtcConsumerDto {
+export class ReceiveTrackDto {
   memberId: string;
   transportId: string;
   producerId: string;

@@ -13,10 +13,10 @@ import { JwtAuthenticationGuard } from 'src/modules/authentication/guards';
 import {
   CreateMemberDto,
   CreateRoomDto,
-  ConnectWebRtcTransportDto,
-  CreateWebRtcConsumerDto,
-  CreateWebRtcProducerDto,
+  ReceiveTrackDto,
+  SendTrackDto,
 } from 'src/modules/video-chat/dto';
+import { ConnectMediaStreamDto } from 'src/modules/video-chat/dto/connect-media-stream-transport.dto';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 
 @Controller('video-chat')
@@ -28,7 +28,7 @@ export class VideoChatController {
   @Get('room/:id/:userId')
   async getRoomByIdAndUserId(
     @Param('id') id: string,
-    @Body('userId') userId: number,
+    @Param('userId') userId: number,
   ) {
     return this.videoChatService.getRoomByIdAndUserId(id, userId);
   }
@@ -49,36 +49,32 @@ export class VideoChatController {
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('room/:id/connect-transport')
-  async connectWebRtcTransport(
+  @Post('room/:id/connect-media-stream')
+  async connectMediaStreamTransport(
     @Param('id') id: string,
-    @Body() data: ConnectWebRtcTransportDto,
+    @Body() data: ConnectMediaStreamDto,
   ) {
-    return this.videoChatService.connectWebRtcTransport(id, data);
+    return this.videoChatService.connectMediaStream(id, data);
   }
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('room/:id/create-producer')
-  async webRtcTransportProduce(
-    @Param('id') id: string,
-    @Body() data: CreateWebRtcProducerDto,
-  ) {
-    const producer = await this.videoChatService.createWebRtcProducer(id, data);
+  @Post('room/:id/send-track')
+  async sendTrack(@Param('id') id: string, @Body() data: SendTrackDto) {
+    const track = await this.videoChatService.sendTrack(id, data);
 
-    return { producerId: producer.id };
+    return { track };
   }
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @Post('room/:id/create-consumer')
+  @Post('room/:id/receive-track')
   async webRtcTransportConsume(
     @Param('id') roomId: string,
-    @Body() data: CreateWebRtcConsumerDto,
+    @Body() data: ReceiveTrackDto,
   ) {
-    const { id, kind, rtpParameters } =
-      await this.videoChatService.createWebRtcConsumer(roomId, data);
+    const track = await this.videoChatService.receiveTrack(roomId, data);
 
-    return { id, kind, rtpParameters };
+    return { track };
   }
 }

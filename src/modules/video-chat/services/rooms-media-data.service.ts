@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
-  ConnectWebRtcTransportDto,
-  CreateWebRtcConsumerDto,
-  CreateWebRtcProducerDto,
+  ConnectMediaStreamDto,
+  ReceiveTrackDto,
+  SendTrackDto,
 } from 'src/modules/video-chat/dto';
 import { MediaData } from 'src/modules/video-chat/models';
 import { WebRtcService } from 'src/modules/webrtc/webrtc.service';
@@ -24,24 +24,36 @@ export class RoomsMediaDataService {
     this._store.set(roomId, roomMediaData);
   }
 
+  delete(roomId: string) {
+    const roomMediaData = this._store.get(roomId);
+    roomMediaData.close();
+    this._store.delete(roomId);
+  }
+
+  deletePeer(roomId: string, memberId: string) {
+    const roomMediaData = this._store.get(roomId);
+    roomMediaData.closePeer(memberId);
+  }
+
   async addPeer(roomId: string, memberId: string) {
     const roomMediaData = this._store.get(roomId);
     await roomMediaData.addPeer(memberId);
   }
 
-  async connectPeerTransport(roomId: string, data: ConnectWebRtcTransportDto) {
+  async connectPeerTransport(roomId: string, data: ConnectMediaStreamDto) {
     const roomMediaData = this._store.get(roomId);
 
     return roomMediaData.connectPeerTransport(data);
   }
 
-  async createPeerProducer(roomId: string, data: CreateWebRtcProducerDto) {
+  async createSendingStreamTrack(roomId: string, track: SendTrackDto) {
     const roomMediaData = this._store.get(roomId);
+    const trackData = await roomMediaData.createPeerTrackProducer(track);
 
-    return roomMediaData.createPeerProducer(data);
+    return { producerId: trackData.id };
   }
 
-  async createPeerConsumer(roomId: string, data: CreateWebRtcConsumerDto) {
+  async createReceivingStreamTrack(roomId: string, data: ReceiveTrackDto) {
     const roomMediaData = this._store.get(roomId);
 
     if (
@@ -56,18 +68,27 @@ export class RoomsMediaDataService {
       );
     }
 
-    return roomMediaData.createPeerConsumer(data);
+    const { id, kind, rtpParameters } =
+      await roomMediaData.createPeerTrackConsumer(data);
+
+    return { id, kind, rtpParameters };
   }
 
-  getRouterRtpCapabilities(roomId: string) {
+  getRoomRouterRtpCapabilities(roomId: string) {
     const roomMediaData = this._store.get(roomId);
 
     return roomMediaData.router.rtpCapabilities;
   }
 
-  getTransports(roomId: string, memberId: string) {
+  getMemberTransports(roomId: string, memberId: string) {
     const roomMediaData = this._store.get(roomId);
 
     return roomMediaData.getTransports(memberId);
+  }
+
+  getProducers(roomId: string) {
+    const roomMediaData = this._store.get(roomId);
+
+    return roomMediaData.getProducers();
   }
 }

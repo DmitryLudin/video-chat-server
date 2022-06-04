@@ -1,6 +1,6 @@
 import { MediaKind, RtpParameters } from 'mediasoup/node/lib/RtpParameters';
 
-export class CreateWebRtcProducerDto {
+export class SendTrackDto {
   memberId: string;
   transportId: string;
   kind: MediaKind;

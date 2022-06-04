@@ -15,7 +15,14 @@ export class WebRtcService {
       .catch((error) => console.log(error));
   }
 
-  async createWorkers() {
+  async createRouter() {
+    const worker = this.getMediasoupWorker();
+    const mediaCodecs = webRtcConfig.mediasoup.router.mediaCodecs;
+
+    return await worker.createRouter({ mediaCodecs } as RouterOptions);
+  }
+
+  private async createWorkers() {
     const { numWorkers } = webRtcConfig.mediasoup;
 
     for (let i = 0; i < numWorkers; i++) {
@@ -35,13 +42,6 @@ export class WebRtcService {
 
       this.workers.push(worker);
     }
-  }
-
-  async createRouter() {
-    const worker = this.getMediasoupWorker();
-    const mediaCodecs = webRtcConfig.mediasoup.router.mediaCodecs;
-
-    return await worker.createRouter({ mediaCodecs } as RouterOptions);
   }
 
   private getMediasoupWorker() {

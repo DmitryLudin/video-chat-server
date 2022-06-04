@@ -6,5 +6,7 @@ export enum VideoChatAction {
   MESSAGES = 'messages',
   MEMBERS = 'members',
   ERROR = 'error',
-  NEW_PRODUCERS = 'new_producers',
+  PRODUCERS = 'producers',
+  CHANGE_VIDEO_STATE = 'change_video_state',
+  CHANGE_AUDIO_STATE = 'change_audio_state',
 }

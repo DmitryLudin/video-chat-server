@@ -96,23 +96,47 @@ export class VideoChatGateway
     };
   }
 
-  // @UseInterceptors(ClassSerializerInterceptor)
-  // @SubscribeMessage(VideoChatAction.NEW_PRODUCERS)
-  // async handelNewProducers(
-  //   @MessageBody() data: { meetingId: string },
-  //   @ConnectedSocket() client: Socket,
-  // ): Promise<WsResponse<{ producers: Array<{ id: TProducerId }> }>> {
-  //   const producers = this.videoChatService.getProducers(data.meetingId);
-  //
-  //   console.log('get producer ids', client.id);
-  //   client.to(data.meetingId).emit(VideoChatAction.NEW_PRODUCERS, {
-  //     producers,
-  //   });
-  //   return {
-  //     event: VideoChatAction.NEW_PRODUCERS,
-  //     data: { producers },
-  //   };
-  // }
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SubscribeMessage(VideoChatAction.PRODUCERS)
+  async handelNewProducers(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket,
+  ): Promise<WsResponse<{ producers: Array<{ id: string }> }>> {
+    const producers = this.videoChatService.getProducers(data.roomId);
+
+    console.log('get producer ids', client.id);
+    client.to(data.roomId).emit(VideoChatAction.PRODUCERS, {
+      producers,
+    });
+    return {
+      event: VideoChatAction.PRODUCERS,
+      data: { producers },
+    };
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SubscribeMessage(VideoChatAction.CHANGE_VIDEO_STATE)
+  async handleChangeVideoState(
+    @MessageBody()
+    data: {
+      roomId: string;
+      memberId: string;
+      producerId: string;
+      isVideoOn: boolean;
+    },
+    @ConnectedSocket() client: Socket,
+  ): Promise<WsResponse<{ producers: Array<{ id: string }> }>> {
+    const producers = this.videoChatService.getProducers(data.roomId);
+
+    console.log('get producer ids', client.id);
+    client.to(data.roomId).emit(VideoChatAction.PRODUCERS, {
+      producers,
+    });
+    return {
+      event: VideoChatAction.PRODUCERS,
+      data: { producers },
+    };
+  }
 
   private deserializeData<T extends object>(data: T): T {
     return instanceToPlain(data) as T;
