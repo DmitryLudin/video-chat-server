@@ -18,6 +18,22 @@ export class MembersService {
   }
 
   async deleteByUserId(userId: number) {
-    return await this.membersRepository.delete({ userId });
+    return await this.membersRepository.softDelete({ userId });
+  }
+
+  async disableAudio(memberId: string) {
+    return this.membersRepository.update(memberId, { isAudioOn: false });
+  }
+
+  async enableAudio(memberId: string) {
+    return this.membersRepository.update(memberId, { isAudioOn: true });
+  }
+
+  async disableVideo(memberId: string) {
+    return this.membersRepository.update(memberId, { isVideoOn: false });
+  }
+
+  async enableVideo(memberId: string) {
+    return this.membersRepository.update(memberId, { isVideoOn: true });
   }
 }

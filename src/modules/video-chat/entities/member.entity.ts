@@ -3,6 +3,7 @@ import { User } from 'src/modules/users/user.entity';
 import { Room } from 'src/modules/video-chat/entities/room.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -41,4 +42,7 @@ export class Member {
 
   @Column({ default: false })
   isSpeaking: boolean;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

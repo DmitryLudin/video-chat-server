@@ -12,8 +12,11 @@ import {
 import { instanceToPlain } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
 import { cors } from 'src/constants/cors';
-import { AddMessageDto } from 'src/modules/video-chat/dto';
-import { Message } from 'src/modules/video-chat/entities';
+import {
+  AddMessageDto,
+  SendTrackPauseResumeDto,
+} from 'src/modules/video-chat/dto';
+import { Member, Message } from 'src/modules/video-chat/entities';
 import { VideoChatService } from 'src/modules/video-chat/video-chat.service';
 import { VideoChatAction } from 'src/modules/video-chat/constants/actions.enum';
 
@@ -97,44 +100,60 @@ export class VideoChatGateway
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.PRODUCERS)
-  async handelNewProducers(
+  @SubscribeMessage(VideoChatAction.TRACKS)
+  async handelNewTracks(
     @MessageBody() data: { roomId: string },
     @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ producers: Array<{ id: string }> }>> {
-    const producers = this.videoChatService.getProducers(data.roomId);
+  ): Promise<
+    WsResponse<{ tracks: Array<{ producerId: string; memberId: string }> }>
+  > {
+    const tracks = this.videoChatService.getMemberTracks(data.roomId);
 
     console.log('get producer ids', client.id);
-    client.to(data.roomId).emit(VideoChatAction.PRODUCERS, {
-      producers,
+    client.to(data.roomId).emit(VideoChatAction.TRACKS, {
+      tracks,
     });
     return {
-      event: VideoChatAction.PRODUCERS,
-      data: { producers },
+      event: VideoChatAction.TRACKS,
+      data: { tracks },
     };
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(VideoChatAction.CHANGE_VIDEO_STATE)
-  async handleChangeVideoState(
+  @SubscribeMessage(VideoChatAction.TRACK_PAUSE)
+  async handleSendTrackPause(
     @MessageBody()
-    data: {
-      roomId: string;
-      memberId: string;
-      producerId: string;
-      isVideoOn: boolean;
-    },
+    data: SendTrackPauseResumeDto,
     @ConnectedSocket() client: Socket,
-  ): Promise<WsResponse<{ producers: Array<{ id: string }> }>> {
-    const producers = this.videoChatService.getProducers(data.roomId);
+  ): Promise<WsResponse<{ members: Member[] }>> {
+    const { room } = await this.videoChatService.sendTrackPause(data);
 
-    console.log('get producer ids', client.id);
-    client.to(data.roomId).emit(VideoChatAction.PRODUCERS, {
-      producers,
+    console.log('send track pause', client.id);
+    client.to(data.roomId).emit(VideoChatAction.MEMBERS, {
+      members: this.deserializeData(room.members),
     });
     return {
-      event: VideoChatAction.PRODUCERS,
-      data: { producers },
+      event: VideoChatAction.MEMBERS,
+      data: { members: room.members },
+    };
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SubscribeMessage(VideoChatAction.TRACK_RESUME)
+  async handleSendTrackResume(
+    @MessageBody()
+    data: SendTrackPauseResumeDto,
+    @ConnectedSocket() client: Socket,
+  ): Promise<WsResponse<{ members: Member[] }>> {
+    const { room } = await this.videoChatService.sendTrackResume(data);
+
+    console.log('send track resume', client.id);
+    client.to(data.roomId).emit(VideoChatAction.MEMBERS, {
+      members: this.deserializeData(room.members),
+    });
+    return {
+      event: VideoChatAction.MEMBERS,
+      data: { members: room.members },
     };
   }
 

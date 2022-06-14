@@ -118,7 +118,8 @@ export class RoomsService {
       await this.membersService.deleteByUserId(userId);
 
       return await this.getById(roomId);
-    } catch {
+    } catch (error) {
+      console.log(error);
       throw new HttpException(
         'Что-то пошло не так',
         HttpStatus.INTERNAL_SERVER_ERROR,

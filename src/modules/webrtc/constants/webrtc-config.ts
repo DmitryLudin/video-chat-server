@@ -4,7 +4,7 @@ import { getLocalIp } from 'src/utils';
 export const webRtcConfig = {
   mediasoup: {
     // Worker settings
-    numWorkers: Object.keys(os.cpus()).length,
+    numWorkers: Object.keys(os.cpus()).length / 2,
     worker: {
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
       rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,

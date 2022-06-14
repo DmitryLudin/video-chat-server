@@ -2,7 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   ConnectMediaStreamDto,
   ReceiveTrackDto,
+  ResumeReceiveTrackDto,
   SendTrackDto,
+  SendTrackPauseResumeDto,
 } from 'src/modules/video-chat/dto';
 import { MediaData } from 'src/modules/video-chat/models';
 import { WebRtcService } from 'src/modules/webrtc/webrtc.service';
@@ -68,10 +70,28 @@ export class RoomsMediaDataService {
       );
     }
 
-    const { id, kind, rtpParameters } =
+    const { id, kind, rtpParameters, type, producerId, producerPaused } =
       await roomMediaData.createPeerTrackConsumer(data);
 
-    return { id, kind, rtpParameters };
+    return { id, kind, rtpParameters, type, producerId, producerPaused };
+  }
+
+  async resumeMemberReceiveTrack(roomId: string, data: ResumeReceiveTrackDto) {
+    const roomMediaData = this._store.get(roomId);
+
+    return roomMediaData.resumePeerReceiveTrack(data);
+  }
+
+  async pauseMemberSendTrack(data: SendTrackPauseResumeDto) {
+    const roomMediaData = this._store.get(data.roomId);
+
+    return roomMediaData.pausePeerSendTrack(data);
+  }
+
+  async resumeMemberSendTrack(data: SendTrackPauseResumeDto) {
+    const roomMediaData = this._store.get(data.roomId);
+
+    return roomMediaData.resumePeerSendTrack(data);
   }
 
   getRoomRouterRtpCapabilities(roomId: string) {
@@ -86,9 +106,9 @@ export class RoomsMediaDataService {
     return roomMediaData.getTransports(memberId);
   }
 
-  getProducers(roomId: string) {
+  getPeerTracks(roomId: string) {
     const roomMediaData = this._store.get(roomId);
 
-    return roomMediaData.getProducers();
+    return roomMediaData.getPeerTracks();
   }
 }

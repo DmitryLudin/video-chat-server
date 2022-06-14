@@ -9,9 +9,12 @@ import {
   CreateMemberDto,
   CreateRoomDto,
   ReceiveTrackDto,
+  ResumeReceiveTrackDto,
   SendTrackDto,
+  SendTrackPauseResumeDto,
 } from 'src/modules/video-chat/dto';
 import {
+  MembersService,
   MessagesService,
   RoomsMediaDataService,
   RoomsService,
@@ -24,6 +27,7 @@ export class VideoChatService {
     private readonly roomsService: RoomsService,
     private readonly roomsMediaDataService: RoomsMediaDataService,
     private readonly messagesService: MessagesService,
+    private readonly membersService: MembersService,
   ) {}
 
   // Методы для контроллера
@@ -61,6 +65,10 @@ export class VideoChatService {
 
   async receiveTrack(roomId: string, data: ReceiveTrackDto) {
     return this.roomsMediaDataService.createReceivingStreamTrack(roomId, data);
+  }
+
+  async resumeReceiveTrack(roomId: string, data: ResumeReceiveTrackDto) {
+    return this.roomsMediaDataService.resumeMemberReceiveTrack(roomId, data);
   }
 
   // Методы для транспорта сокетов
@@ -126,8 +134,42 @@ export class VideoChatService {
     }
   }
 
-  getProducers(roomId: string) {
-    return this.roomsMediaDataService.getProducers(roomId);
+  async sendTrackPause(data: SendTrackPauseResumeDto) {
+    try {
+      await (data.kind === 'audio'
+        ? this.membersService.disableAudio(data.memberId)
+        : this.membersService.disableVideo(data.memberId));
+
+      const room = await this.roomsService.getById(data.roomId);
+
+      await this.roomsMediaDataService.pauseMemberSendTrack(data);
+
+      return { room };
+    } catch (error) {
+      console.log('send track pause', error);
+      throw new WsException(error as object);
+    }
+  }
+
+  async sendTrackResume(data: SendTrackPauseResumeDto) {
+    try {
+      await (data.kind === 'audio'
+        ? this.membersService.enableAudio(data.memberId)
+        : this.membersService.enableVideo(data.memberId));
+
+      const room = await this.roomsService.getById(data.roomId);
+
+      await this.roomsMediaDataService.resumeMemberSendTrack(data);
+
+      return { room };
+    } catch (error) {
+      console.log('send track pause', error);
+      throw new WsException(error as object);
+    }
+  }
+
+  getMemberTracks(roomId: string) {
+    return this.roomsMediaDataService.getPeerTracks(roomId);
   }
 
   // Приватные методы

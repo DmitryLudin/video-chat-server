@@ -14,6 +14,7 @@ import {
   CreateMemberDto,
   CreateRoomDto,
   ReceiveTrackDto,
+  ResumeReceiveTrackDto,
   SendTrackDto,
 } from 'src/modules/video-chat/dto';
 import { ConnectMediaStreamDto } from 'src/modules/video-chat/dto/connect-media-stream-transport.dto';
@@ -69,12 +70,24 @@ export class VideoChatController {
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
   @Post('room/:id/receive-track')
-  async webRtcTransportConsume(
+  async receiveTrack(
     @Param('id') roomId: string,
     @Body() data: ReceiveTrackDto,
   ) {
     const track = await this.videoChatService.receiveTrack(roomId, data);
 
     return { track };
+  }
+
+  @HttpCode(200)
+  @UseGuards(JwtAuthenticationGuard)
+  @Post('room/:id/resume-receive-track')
+  async resumeReceiveTrack(
+    @Param('id') roomId: string,
+    @Body() data: ResumeReceiveTrackDto,
+  ) {
+    await this.videoChatService.resumeReceiveTrack(roomId, data);
+
+    return { resumed: true };
   }
 }

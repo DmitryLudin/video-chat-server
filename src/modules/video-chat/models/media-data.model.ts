@@ -5,7 +5,9 @@ import { WebRtcTransport } from 'mediasoup/node/lib/WebRtcTransport';
 import {
   ConnectMediaStreamDto,
   ReceiveTrackDto,
+  ResumeReceiveTrackDto,
   SendTrackDto,
+  SendTrackPauseResumeDto,
 } from 'src/modules/video-chat/dto';
 import { IWebrtcTransportParams } from 'src/modules/video-chat/types';
 import { webRtcConfig } from 'src/modules/webrtc/constants';
@@ -49,16 +51,16 @@ export class MediaData {
     return transports;
   }
 
-  getProducers() {
-    const producers: Array<{ id: string }> = [];
+  getPeerTracks() {
+    const tracks: Array<{ producerId: string; memberId: string }> = [];
 
-    this.peers.forEach((peer) => {
+    this.peers.forEach((peer, memberId) => {
       peer.producers.forEach((producer) => {
-        producers.push({ id: producer.id });
+        tracks.push({ producerId: producer.id, memberId });
       });
     });
 
-    return producers;
+    return tracks;
   }
 
   async addPeer(memberId: string) {
@@ -137,6 +139,27 @@ export class MediaData {
     }
 
     return consumer;
+  }
+
+  async resumePeerReceiveTrack({
+    memberId,
+    consumerId,
+  }: ResumeReceiveTrackDto) {
+    const peer = this.peers.get(memberId);
+    const trackConsumer = peer.consumers.get(consumerId);
+    return trackConsumer.resume();
+  }
+
+  async pausePeerSendTrack({ memberId, producerId }: SendTrackPauseResumeDto) {
+    const peer = this.peers.get(memberId);
+    const trackProducer = peer.producers.get(producerId);
+    return trackProducer.pause();
+  }
+
+  async resumePeerSendTrack({ memberId, producerId }: SendTrackPauseResumeDto) {
+    const peer = this.peers.get(memberId);
+    const trackProducer = peer.producers.get(producerId);
+    return trackProducer.resume();
   }
 
   close() {
