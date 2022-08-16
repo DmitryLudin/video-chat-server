@@ -5,7 +5,7 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { WebRtcModule } from 'src/modules/webrtc/webrtc.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './authentication/authentication.module';
-import { VideoChatModule } from 'src/modules/video-chat/video-chat.module';
+import { ConferencesModule } from './conferences/conferences.module';
 
 @Module({
   imports: [
@@ -28,8 +28,8 @@ import { VideoChatModule } from 'src/modules/video-chat/video-chat.module';
     UsersModule,
     DatabaseModule,
     AuthenticationModule,
-    VideoChatModule,
     WebRtcModule,
+    ConferencesModule,
   ],
   controllers: [],
 })

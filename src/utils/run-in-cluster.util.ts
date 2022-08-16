@@ -2,7 +2,7 @@ import cluster from 'node:cluster';
 import { cpus } from 'node:os';
 
 export function runInCluster(bootstrap: () => Promise<void>) {
-  const numberOfCores = cpus().length;
+  const numberOfCores = cpus().length / 2;
 
   if (cluster?.isPrimary) {
     for (let i = 0; i < numberOfCores; ++i) {

@@ -3,6 +3,7 @@ const ifaces = os.networkInterfaces();
 
 export const getLocalIp = () => {
   let localIp = '127.0.0.1';
+
   Object.keys(ifaces).forEach((ifname) => {
     for (const iface of ifaces[ifname]) {
       // Ignore IPv6 and 127.0.0.1
@@ -14,5 +15,6 @@ export const getLocalIp = () => {
       return;
     }
   });
+
   return localIp;
 };
