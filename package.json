@@ -15,7 +15,8 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "ts-check-hook": "tsc --noEmit -p tsconfig.build.json",
-    "docker": "docker-compose -f config/docker/docker-compose.yml up",
+    "docker-compose:dev": "docker-compose up --build -V",
+    "docker-compose:prod": "docker-compose -f docker-compose.yml -f production.yml up --build -V",
     "prepare": "husky install"
   },
   "lint-staged": {
