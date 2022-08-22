@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Member } from 'src/modules/conferences/entities';
 import { CreateMemberDto } from 'src/modules/conferences/modules/members/dto';
@@ -20,11 +20,29 @@ export class MembersService {
   }
 
   async create(memberData: CreateMemberDto) {
-    const member = this.membersRepository.create(memberData);
+    let member = await this.membersRepository.findOne({
+      where: { userId: memberData.userId },
+      withDeleted: true,
+    });
 
-    await this.membersRepository.save(member);
+    if (member) {
+      await this.restore(member.id);
+    } else {
+      member = this.membersRepository.create(memberData);
+      await this.membersRepository.save(member);
+    }
 
     return await this.getById(member.id);
+  }
+
+  async restore(id: string) {
+    const restoreResponse = await this.membersRepository.restore(id);
+    if (!restoreResponse.affected) {
+      throw new HttpException(
+        'Пользователь уже является участником встречи',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   async delete(id: string) {

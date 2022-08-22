@@ -40,6 +40,8 @@ export class ControllerHelperService {
     );
 
     await this.mediaDataService.addMediaStream(roomId, member.id);
+
+    return room;
   }
 
   /* Media Stream */

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import { parse } from 'cookie';
 import { Socket } from 'socket.io';
 import { AuthenticationService } from 'src/modules/authentication/authentication.service';
 import { MediaDataService } from 'src/modules/conferences/modules/media-data/media-data.service';
@@ -19,23 +18,20 @@ export class GatewayHelperService {
 
   async connect(client: Socket) {
     try {
-      const user = await this.getUserFromSocket(client);
+      const user = await this.authenticationService.getUserFromSocket(client);
       const room = await this.roomsService.getByUserId(user.id);
-      const member = room.members.find((member) => member.user.id === user.id);
-      const mediaData = {
-        routerRtpCapabilities:
-          this.mediaDataService.getRoomRouterRtpCapabilities(room.id),
-        transports: this.mediaDataService.getMediaStreamTransports(
-          room.id,
-          member.id,
-        ),
-      };
+      // const member = room.members.find((member) => member.user.id === user.id);
+      // const mediaData = {
+      //   routerRtpCapabilities:
+      //     this.mediaDataService.getRoomRouterRtpCapabilities(room.id),
+      //   transports: this.mediaDataService.getMediaStreamTransports(
+      //     room.id,
+      //     member.id,
+      //   ),
+      // };
 
       console.log('connect', client.id);
-      return {
-        room,
-        mediaData,
-      };
+      return room;
     } catch (error) {
       console.log('join', error);
       throw new WsException(error as object);
@@ -44,7 +40,7 @@ export class GatewayHelperService {
 
   async disconnect(client: Socket) {
     try {
-      const user = await this.getUserFromSocket(client);
+      const user = await this.authenticationService.getUserFromSocket(client);
       const room = await this.roomsService.getByUserId(user.id);
       const member = room.members.find((member) => member.user.id === user.id);
       console.log('disconnect', client.id);
@@ -103,20 +99,5 @@ export class GatewayHelperService {
       console.log('media stream producer resume', error);
       throw new WsException(error as object);
     }
-  }
-
-  private async getUserFromSocket(socket: Socket) {
-    const cookie = socket.handshake.headers.cookie;
-    const { Authentication: authenticationToken } = parse(cookie);
-    const user =
-      await this.authenticationService.getUserFromAuthenticationToken(
-        authenticationToken,
-      );
-
-    if (!user) {
-      throw new WsException('Неверные учетные данные.');
-    }
-
-    return user;
   }
 }

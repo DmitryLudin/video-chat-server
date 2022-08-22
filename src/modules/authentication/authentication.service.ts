@@ -1,7 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { WsException } from '@nestjs/websockets';
 import * as bcrypt from 'bcrypt';
+import { parse } from 'cookie';
+import { Socket } from 'socket.io';
 import { RegisterDto } from 'src/modules/authentication/dto';
 import { TokenPayload } from 'src/modules/authentication/types';
 import { PostgresErrorCode } from 'src/modules/database/constants';
@@ -90,7 +93,7 @@ export class AuthenticationService {
     ];
   }
 
-  public async getUserFromAuthenticationToken(token: string) {
+  async getUserFromAuthenticationToken(token: string) {
     const payload: TokenPayload = this.jwtService.verify(token, {
       secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
     });
@@ -98,6 +101,18 @@ export class AuthenticationService {
     if (payload.userId) {
       return this.usersService.getById(payload.userId);
     }
+  }
+
+  async getUserFromSocket(socket: Socket) {
+    const cookie = socket.handshake.headers.cookie;
+    const { Authentication: authenticationToken } = parse(cookie);
+    const user = await this.getUserFromAuthenticationToken(authenticationToken);
+
+    if (!user) {
+      throw new WsException('Неверные учетные данные.');
+    }
+
+    return user;
   }
 
   private async verifyPassword(

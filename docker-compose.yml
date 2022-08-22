@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.9"
 services:
   main:
     container_name: main
@@ -8,11 +8,11 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
-    ports:
-      - ${PORT}:${PORT}
-      - "3000:3000"
     env_file:
       - .env
+    ports:
+      - "${PORT}:${PORT}"
+      - "9229:9229"
     networks:
       - webnet
     depends_on:
@@ -28,8 +28,9 @@ services:
   postgres:
     container_name: postgres
     image: postgres:latest
+    restart: always
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - postgres:/data/postgres
     env_file:
@@ -41,16 +42,20 @@ services:
     links:
       - postgres:postgres
     container_name: pgadmin
+    restart: always
     image: dpage/pgadmin4
     ports:
-      - 8080:80
+      - "8080:80"
     volumes:
       - pgadmin:/var/lib/pgadmin
     env_file:
       - docker.env
+    networks:
+      - webnet
 
 networks:
   webnet:
+    driver: bridge
 
 volumes:
   postgres:

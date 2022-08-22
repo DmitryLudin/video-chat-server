@@ -12,7 +12,10 @@ export class MessagesService {
   ) {}
 
   async getById(id: string) {
-    return await this.messagesRepository.findOne({ where: { id } });
+    return await this.messagesRepository.findOne({
+      where: { id },
+      relations: ['author', 'reply', 'reply.author'],
+    });
   }
 
   async getAllByRoomId(roomId: string) {

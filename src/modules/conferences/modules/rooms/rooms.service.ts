@@ -89,13 +89,14 @@ export class RoomsService {
   async addMember(roomId: string, data: ICreateMemberDto) {
     try {
       const room = await this.getById(roomId);
+      const member = await this.membersService.create(data);
 
       await this.roomsRepository.save({
         ...room,
-        members: [...room.members, data],
+        members: [...room.members, member],
       });
 
-      return this.getById(room.id);
+      return this.getById(roomId);
     } catch (error: unknown) {
       const postgresError = error as { code?: string };
 

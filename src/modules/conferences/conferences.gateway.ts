@@ -6,11 +6,10 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   WsResponse,
 } from '@nestjs/websockets';
 import { instanceToPlain } from 'class-transformer';
-import { Server, Socket } from 'socket.io';
+import { Socket } from 'socket.io';
 import { cors } from 'src/constants/cors';
 import { RoomEventEnum } from 'src/modules/conferences/constants/room-event.enum';
 import { Member } from 'src/modules/conferences/entities';
@@ -21,22 +20,16 @@ import { IPauseResumeMediaStreamProducerDto } from 'src/modules/conferences/type
 export class ConferencesGateway
   implements OnGatewayDisconnect, OnGatewayConnection
 {
-  @WebSocketServer()
-  server: Server;
-
   constructor(private readonly service: GatewayHelperService) {}
 
   async handleConnection(client: Socket) {
     try {
-      const { room, mediaData } = await this.service.connect(client);
+      const room = await this.service.connect(client);
 
-      client.to(room.id).emit(RoomEventEnum.MEMBERS, {
-        members: this.deserializeData(room.members),
-      });
-      client.emit(RoomEventEnum.JOIN_ROOM, {
-        room: this.deserializeData(room),
-        mediaData,
-      });
+      client
+        .to(room.id)
+        .emit(RoomEventEnum.MEMBERS, this.deserializeData(room.members));
+      client.emit(RoomEventEnum.JOIN_ROOM, this.deserializeData(room));
       client.join(room.id);
     } catch (error) {
       console.log(error);
@@ -56,9 +49,9 @@ export class ConferencesGateway
         });
       }
 
-      return client.to(room.id).emit(RoomEventEnum.LEAVE_ROOM, {
-        members: this.deserializeData(room.members),
-      });
+      return client
+        .to(room.id)
+        .emit(RoomEventEnum.LEAVE_ROOM, this.deserializeData(room.members));
     } catch (error) {
       client.emit(RoomEventEnum.ERROR, { error });
       client.disconnect();
