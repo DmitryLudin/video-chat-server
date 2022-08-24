@@ -29,6 +29,7 @@ module.exports = {
     'unicorn/no-null': 'off',
     'unicorn/numeric-separators-style': 'off',
     'unicorn/no-array-for-each': 'warn',
-    'unicorn/no-array-for-each': 'off'
+    'unicorn/no-array-for-each': 'off',
+    'unicorn/no-empty-file': 'off'
   },
 };

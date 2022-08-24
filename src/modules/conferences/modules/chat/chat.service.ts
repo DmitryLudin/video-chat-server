@@ -1,23 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { AuthenticationService } from 'src/modules/authentication/authentication.service';
 import { AddMessageDto } from 'src/modules/conferences/modules/chat/dto';
 import { MessagesService } from 'src/modules/conferences/modules/messages/messages.service';
-import { RoomsService } from 'src/modules/conferences/modules/rooms/rooms.service';
+import { ConferenceGatewayHelperService } from 'src/modules/conferences/services';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly messagesService: MessagesService,
-    private readonly authenticationService: AuthenticationService,
-    private readonly roomsService: RoomsService,
+    private readonly helperService: ConferenceGatewayHelperService,
   ) {}
 
   async connect(client: Socket) {
     try {
-      const user = await this.authenticationService.getUserFromSocket(client);
-      const room = await this.roomsService.getByUserId(user.id);
+      const { room } = await this.helperService.getUserAndRoomFromSocket(
+        client,
+      );
 
       client.join(room.id);
       return await this.messagesService.getAllByRoomId(room.id);
