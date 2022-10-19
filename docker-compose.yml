@@ -10,6 +10,7 @@ services:
       - /usr/src/app/node_modules
     env_file:
       - .env
+      - media.env
     ports:
       - "${PORT}:${PORT}"
       - "9229:9229"

@@ -28,10 +28,6 @@ export class RoomsGateway implements OnGatewayDisconnect, OnGatewayConnection {
           RoomEventEnum.MEMBERS,
           this.helperService.deserializeData(room.members),
         );
-      client.emit(
-        RoomEventEnum.JOIN_ROOM,
-        this.helperService.deserializeData(room),
-      );
       client.join(room.id);
     } catch (error) {
       console.log(error);
@@ -64,7 +60,7 @@ export class RoomsGateway implements OnGatewayDisconnect, OnGatewayConnection {
       return client
         .to(room.id)
         .emit(
-          RoomEventEnum.LEAVE_ROOM,
+          RoomEventEnum.MEMBERS,
           this.helperService.deserializeData(updatedRoom.members),
         );
     } catch (error) {

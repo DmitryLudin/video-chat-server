@@ -1,6 +1,7 @@
 import { Consumer } from 'mediasoup/node/lib/Consumer';
 import { Producer } from 'mediasoup/node/lib/Producer';
 import { Router } from 'mediasoup/node/lib/Router';
+import { MediaKind } from 'mediasoup/node/lib/RtpParameters';
 import { WebRtcTransport } from 'mediasoup/node/lib/WebRtcTransport';
 import {
   IConnectMediaStreamDto,
@@ -52,11 +53,19 @@ export class MediaData {
   }
 
   getStreamTracks() {
-    const tracks: Array<{ producerId: string; memberId: string }> = [];
+    const tracks: Array<{
+      producerId: string;
+      memberId: string;
+      mediaKind: MediaKind;
+    }> = [];
 
     this.streams.forEach((stream, memberId) => {
       stream.producers.forEach((producer) => {
-        tracks.push({ producerId: producer.id, memberId });
+        tracks.push({
+          producerId: producer.id,
+          memberId,
+          mediaKind: producer.kind,
+        });
       });
     });
 
@@ -69,6 +78,7 @@ export class MediaData {
       this.createTransport(),
     ]);
 
+    console.log(transports[0].id);
     this.streams.set(memberId, {
       transports: new Map(
         transports.map((transport) => [transport.id, transport]),
@@ -101,10 +111,11 @@ export class MediaData {
 
     producer.on('transportclose', async () => {
       await producer.close();
-      this.streams.get(memberId).transports.delete(transportId);
+      this.streams.get(memberId)?.transports?.delete(transportId);
       stream.producers.delete(producer.id);
     });
 
+    console.log(producer);
     return producer;
   }
 
@@ -140,7 +151,7 @@ export class MediaData {
     consumer.on('transportclose', async () => {
       console.log('createStreamConsumer: transport close');
       await consumer.close();
-      this.streams.get(memberId).transports.delete(transportId);
+      this.streams.get(memberId)?.transports?.delete(transportId);
       stream.consumers.delete(consumer.id);
     });
 
@@ -151,12 +162,12 @@ export class MediaData {
       stream.consumers.delete(consumer.id);
     });
 
-    if (consumer.type === 'simulcast') {
-      await consumer.setPreferredLayers({
-        spatialLayer: 2,
-        temporalLayer: 2,
-      });
-    }
+    // if (consumer.type === 'simulcast') {
+    //   await consumer.setPreferredLayers({
+    //     spatialLayer: 2,
+    //     temporalLayer: 2,
+    //   });
+    // }
 
     return consumer;
   }

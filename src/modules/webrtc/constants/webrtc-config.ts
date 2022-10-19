@@ -1,5 +1,4 @@
 import * as os from 'node:os';
-import { getLocalIp } from 'src/utils';
 
 export const webRtcConfig = {
   mediasoup: {
@@ -8,7 +7,7 @@ export const webRtcConfig = {
     worker: {
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
       rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
-      logLevel: 'warn',
+      logLevel: 'debug',
       logTags: [
         'info',
         'ice',
@@ -78,12 +77,15 @@ export const webRtcConfig = {
     webRtcTransport: {
       listenIps: [
         {
-          ip: '0.0.0.0',
-          announcedIp: getLocalIp(), // replace by public IP address
+          ip: process.env.MEDIASOUP_LISTEN_IP || '127.0.0.1',
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '0.0.0.0',
         },
       ],
-      maxIncomingBitrate: 1500000,
       initialAvailableOutgoingBitrate: 1000000,
+      minimumAvailableOutgoingBitrate: 600000,
+      maxSctpMessageSize: 262144,
+      // Additional options that are not part of WebRtcTransportOptions.
+      maxIncomingBitrate: 1500000,
     },
   },
 };

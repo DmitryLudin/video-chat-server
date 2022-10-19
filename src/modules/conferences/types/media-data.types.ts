@@ -5,6 +5,10 @@ import {
 } from 'mediasoup/node/lib/RtpParameters';
 import { DtlsParameters } from 'mediasoup/node/lib/WebRtcTransport';
 
+export interface ICreateMediaDataDto {
+  memberId: string;
+}
+
 export interface IConnectMediaStreamDto {
   memberId: string;
   transportId: string;

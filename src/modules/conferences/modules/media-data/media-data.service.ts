@@ -3,6 +3,7 @@ import { MediaData } from 'src/modules/conferences/modules/media-data/media-data
 import {
   IConnectMediaStreamDto,
   ICreateMediaStreamConsumerDto,
+  ICreateMediaDataDto,
   ICreateMediaStreamProducerDto,
   IPauseResumeMediaStreamProducerDto,
   IResumeMediaStreamConsumerDto,
@@ -38,14 +39,15 @@ export class MediaDataService {
     return mediaData.getStreamTracks();
   }
 
-  async create(roomId: string, memberId: string) {
+  async create(roomId: string, { memberId }: ICreateMediaDataDto) {
     const router = await this.webRtcService.createRouter();
     const mediaData = new MediaData(router);
     await mediaData.addStream(memberId);
     this._store.set(roomId, mediaData);
+    console.log('Создали медиа данные');
   }
 
-  async addMediaStream(roomId: string, memberId: string) {
+  async addMediaStream(roomId: string, { memberId }: ICreateMediaDataDto) {
     const mediaData = this._store.get(roomId);
     await mediaData.addStream(memberId);
   }
@@ -53,6 +55,7 @@ export class MediaDataService {
   async connectMediaStream(roomId: string, data: IConnectMediaStreamDto) {
     const mediaData = this._store.get(roomId);
 
+    console.log('Подключились к транспорту медиа данных');
     return mediaData.connectStreamTransport(data);
   }
 
@@ -63,6 +66,7 @@ export class MediaDataService {
     const mediaData = this._store.get(roomId);
     const producer = await mediaData.createStreamProducer(data);
 
+    console.log('Создали продюсера');
     return { producerId: producer.id };
   }
 
