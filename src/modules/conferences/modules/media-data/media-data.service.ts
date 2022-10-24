@@ -33,10 +33,10 @@ export class MediaDataService {
     return mediaData.getTransports(memberId);
   }
 
-  getMediaStreamTracks(roomId: string) {
+  getMembersMediaData(roomId: string) {
     const mediaData = this._store.get(roomId);
 
-    return mediaData.getStreamTracks();
+    return mediaData.getMemberMediaData();
   }
 
   async create(roomId: string, { memberId }: ICreateMediaDataDto) {
@@ -44,7 +44,6 @@ export class MediaDataService {
     const mediaData = new MediaData(router);
     await mediaData.addStream(memberId);
     this._store.set(roomId, mediaData);
-    console.log('Создали медиа данные');
   }
 
   async addMediaStream(roomId: string, { memberId }: ICreateMediaDataDto) {
@@ -66,7 +65,6 @@ export class MediaDataService {
     const mediaData = this._store.get(roomId);
     const producer = await mediaData.createStreamProducer(data);
 
-    console.log('Создали продюсера');
     return { producerId: producer.id };
   }
 

@@ -1,4 +1,7 @@
 import * as os from 'node:os';
+import { getLocalIp } from 'src/utils';
+
+console.log(getLocalIp());
 
 export const webRtcConfig = {
   mediasoup: {
@@ -77,8 +80,8 @@ export const webRtcConfig = {
     webRtcTransport: {
       listenIps: [
         {
-          ip: process.env.MEDIASOUP_LISTEN_IP || '127.0.0.1',
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '0.0.0.0',
+          ip: '0.0.0.0',
+          announcedIp: getLocalIp(), // replace by public IP address
         },
       ],
       initialAvailableOutgoingBitrate: 1000000,

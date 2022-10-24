@@ -1,18 +1,22 @@
 import { ClassSerializerInterceptor, UseInterceptors } from '@nestjs/common';
 import {
   ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WsResponse,
 } from '@nestjs/websockets';
-import { MediaKind } from 'mediasoup/node/lib/RtpParameters';
 import { Socket } from 'socket.io';
 import { cors } from 'src/constants/cors';
 import { MediaDataEventEnum } from 'src/modules/conferences/modules/media-data/constants/media-data-event.enum';
 import { MediaDataService } from 'src/modules/conferences/modules/media-data/media-data.service';
 import { ConferenceGatewayHelperService } from 'src/modules/conferences/services';
+import {
+  IGetMemberMediaDataDto,
+  IPauseResumeMediaStreamProducerDto,
+} from 'src/modules/conferences/types/media-data.types';
 
 @WebSocketGateway({ cors, namespace: 'conferences/media-data' })
 export class MediaDataGateway
@@ -74,24 +78,52 @@ export class MediaDataGateway
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @SubscribeMessage(MediaDataEventEnum.NEW_TRACKS)
+  @SubscribeMessage(MediaDataEventEnum.REMOTE_MEDIA_DATA)
   async handelNewTracks(@ConnectedSocket() client: Socket): Promise<
     WsResponse<{
-      tracks: Array<{
-        producerId: string;
-        memberId: string;
-        mediaKind: MediaKind;
-      }>;
+      membersMediaData: Array<IGetMemberMediaDataDto>;
     }>
   > {
     const { room } = await this.helperService.getUserAndRoomFromSocket(client);
-    const tracks = this.mediaDataService.getMediaStreamTracks(room.id);
+    const membersMediaData = this.mediaDataService.getMembersMediaData(room.id);
 
     console.log('get stream producer ids', client.id);
-    client.to(room.id).emit(MediaDataEventEnum.NEW_TRACKS, { tracks });
+    client
+      .to(room.id)
+      .emit(MediaDataEventEnum.REMOTE_MEDIA_DATA, { membersMediaData });
     return {
-      event: MediaDataEventEnum.NEW_TRACKS,
-      data: { tracks },
+      event: MediaDataEventEnum.REMOTE_MEDIA_DATA,
+      data: { membersMediaData },
+    };
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SubscribeMessage(MediaDataEventEnum.STREAM_PAUSE)
+  async handleStreamPause(
+    @MessageBody() data: IPauseResumeMediaStreamProducerDto,
+    @ConnectedSocket() client: Socket,
+  ): Promise<WsResponse<IPauseResumeMediaStreamProducerDto>> {
+    await this.mediaDataService.pauseMediaStreamProducer(data);
+
+    client.to(data.roomId).emit(MediaDataEventEnum.STREAM_PAUSE, data);
+    return {
+      event: MediaDataEventEnum.STREAM_PAUSE,
+      data,
+    };
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SubscribeMessage(MediaDataEventEnum.STREAM_RESUME)
+  async handleStreamResume(
+    @MessageBody() data: IPauseResumeMediaStreamProducerDto,
+    @ConnectedSocket() client: Socket,
+  ): Promise<WsResponse<IPauseResumeMediaStreamProducerDto>> {
+    await this.mediaDataService.resumeMediaStreamProducer(data);
+
+    client.to(data.roomId).emit(MediaDataEventEnum.STREAM_RESUME, data);
+    return {
+      event: MediaDataEventEnum.STREAM_RESUME,
+      data,
     };
   }
 }

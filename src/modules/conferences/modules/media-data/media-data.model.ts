@@ -7,6 +7,7 @@ import {
   IConnectMediaStreamDto,
   ICreateMediaStreamConsumerDto,
   ICreateMediaStreamProducerDto,
+  IGetMemberMediaDataDto,
   IPauseResumeMediaStreamProducerDto,
   IResumeMediaStreamConsumerDto,
 } from 'src/modules/conferences/types/media-data.types';
@@ -25,22 +26,22 @@ interface IMediaStream {
 
 export class MediaData {
   private readonly _router: Router;
-  private readonly streams: Map<TMemberId, IMediaStream>;
+  private readonly store: Map<TMemberId, IMediaStream>;
 
   get router() {
     return this._router;
   }
 
   constructor(router: Router) {
-    this.streams = new Map();
+    this.store = new Map();
     this._router = router;
   }
 
   getTransports(memberId: string) {
-    const mediaStream = this.streams.get(memberId);
+    const mediaData = this.store.get(memberId);
     const transports: Array<IWebrtcTransportParams> = [];
 
-    mediaStream.transports.forEach((transport) => {
+    mediaData.transports.forEach((transport) => {
       transports.push({
         id: transport.id,
         iceParameters: transport.iceParameters,
@@ -52,24 +53,23 @@ export class MediaData {
     return transports;
   }
 
-  getStreamTracks() {
-    const tracks: Array<{
-      producerId: string;
-      memberId: string;
-      mediaKind: MediaKind;
-    }> = [];
+  getMemberMediaData() {
+    const mediaData: Array<IGetMemberMediaDataDto> = [];
 
-    this.streams.forEach((stream, memberId) => {
-      stream.producers.forEach((producer) => {
-        tracks.push({
-          producerId: producer.id,
-          memberId,
-          mediaKind: producer.kind,
-        });
+    this.store.forEach((memberMediaData, memberId) => {
+      const streams: Array<{ producerId: string; mediaKind: MediaKind }> = [];
+
+      memberMediaData.producers.forEach((producer) => {
+        streams.push({ producerId: producer.id, mediaKind: producer.kind });
+      });
+
+      mediaData.push({
+        memberId,
+        streams,
       });
     });
 
-    return tracks;
+    return mediaData;
   }
 
   async addStream(memberId: string) {
@@ -78,8 +78,7 @@ export class MediaData {
       this.createTransport(),
     ]);
 
-    console.log(transports[0].id);
-    this.streams.set(memberId, {
+    this.store.set(memberId, {
       transports: new Map(
         transports.map((transport) => [transport.id, transport]),
       ),
@@ -93,9 +92,9 @@ export class MediaData {
     dtlsParameters,
     transportId,
   }: IConnectMediaStreamDto) {
-    const stream = this.streams.get(memberId);
+    const mediaData = this.store.get(memberId);
 
-    return stream.transports.get(transportId).connect({ dtlsParameters });
+    return mediaData.transports.get(transportId).connect({ dtlsParameters });
   }
 
   /* Stream Producers */
@@ -104,18 +103,19 @@ export class MediaData {
     transportId,
     ...others
   }: ICreateMediaStreamProducerDto) {
-    const stream = this.streams.get(memberId);
-    const producer = await stream.transports.get(transportId).produce(others);
+    const mediaData = this.store.get(memberId);
+    const producer = await mediaData.transports
+      .get(transportId)
+      .produce(others);
 
-    stream.producers.set(producer.id, producer);
+    mediaData.producers.set(producer.id, producer);
 
     producer.on('transportclose', async () => {
       await producer.close();
-      this.streams.get(memberId)?.transports?.delete(transportId);
-      stream.producers.delete(producer.id);
+      this.store.get(memberId)?.transports?.delete(transportId);
+      mediaData.producers.delete(producer.id);
     });
 
-    console.log(producer);
     return producer;
   }
 
@@ -123,8 +123,8 @@ export class MediaData {
     memberId,
     producerId,
   }: IPauseResumeMediaStreamProducerDto) {
-    const stream = this.streams.get(memberId);
-    const trackProducer = stream.producers.get(producerId);
+    const mediaData = this.store.get(memberId);
+    const trackProducer = mediaData.producers.get(producerId);
     return trackProducer.pause();
   }
 
@@ -132,8 +132,8 @@ export class MediaData {
     memberId,
     producerId,
   }: IPauseResumeMediaStreamProducerDto) {
-    const stream = this.streams.get(memberId);
-    const trackProducer = stream.producers.get(producerId);
+    const mediaData = this.store.get(memberId);
+    const trackProducer = mediaData.producers.get(producerId);
     return trackProducer.resume();
   }
 
@@ -143,31 +143,43 @@ export class MediaData {
     transportId,
     ...others
   }: ICreateMediaStreamConsumerDto) {
-    const stream = this.streams.get(memberId);
-    const consumer = await stream.transports.get(transportId).consume(others);
+    const mediaData = this.store.get(memberId);
+    const consumer = await mediaData.transports
+      .get(transportId)
+      .consume(others);
 
-    stream.consumers.set(consumer.id, consumer);
+    mediaData.consumers.set(consumer.id, consumer);
 
     consumer.on('transportclose', async () => {
       console.log('createStreamConsumer: transport close');
       await consumer.close();
-      this.streams.get(memberId)?.transports?.delete(transportId);
-      stream.consumers.delete(consumer.id);
+      this.store.get(memberId)?.transports?.delete(transportId);
+      mediaData.consumers.delete(consumer.id);
     });
 
     consumer.on('producerclose', async () => {
       console.log('createStreamConsumer: producer close');
       await consumer.close();
-      stream.producers.delete(others.producerId);
-      stream.consumers.delete(consumer.id);
+      mediaData.producers.delete(others.producerId);
+      mediaData.consumers.delete(consumer.id);
     });
 
-    // if (consumer.type === 'simulcast') {
-    //   await consumer.setPreferredLayers({
-    //     spatialLayer: 2,
-    //     temporalLayer: 2,
-    //   });
-    // }
+    consumer.on('producerpause', async () => {
+      console.log('createStreamConsumer: producer pause');
+      await consumer.pause();
+    });
+
+    consumer.on('producerresume', async () => {
+      console.log('createStreamConsumer: producer resume');
+      await consumer.resume();
+    });
+
+    if (consumer.type === 'simulcast') {
+      await consumer.setPreferredLayers({
+        spatialLayer: 2,
+        temporalLayer: 2,
+      });
+    }
 
     return consumer;
   }
@@ -176,31 +188,31 @@ export class MediaData {
     memberId,
     consumerId,
   }: IResumeMediaStreamConsumerDto) {
-    const stream = this.streams.get(memberId);
-    const trackConsumer = stream.consumers.get(consumerId);
+    const mediaData = this.store.get(memberId);
+    const trackConsumer = mediaData.consumers.get(consumerId);
     return trackConsumer.resume();
   }
 
   /* Close Streams */
   closeAllStreams() {
     this._router.close();
-    this.streams.forEach((stream, memberId: string) => {
+    this.store.forEach((stream, memberId: string) => {
       this.closeStream(memberId);
     });
   }
 
   closeStream(memberId: string) {
-    const stream = this.streams.get(memberId);
+    const mediaData = this.store.get(memberId);
 
-    stream.transports.forEach((transport) => {
+    mediaData.transports.forEach((transport) => {
       // our producer and consumer event handlers will take care of
       // calling closeProducer() and closeConsumer() on all the producers
       // and consumers associated with this transport
       transport.close();
-      stream.transports.delete(transport.id);
+      mediaData.transports.delete(transport.id);
     });
 
-    this.streams.delete(memberId);
+    this.store.delete(memberId);
   }
 
   private async createTransport() {

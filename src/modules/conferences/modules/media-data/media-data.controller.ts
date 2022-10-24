@@ -12,8 +12,8 @@ import { JwtAuthenticationGuard } from 'src/modules/authentication/guards';
 import { MediaDataService } from 'src/modules/conferences/modules/media-data/media-data.service';
 import {
   IConnectMediaStreamDto,
-  ICreateMediaStreamConsumerDto,
   ICreateMediaDataDto,
+  ICreateMediaStreamConsumerDto,
   ICreateMediaStreamProducerDto,
   IResumeMediaStreamConsumerDto,
 } from 'src/modules/conferences/types/media-data.types';
@@ -60,9 +60,7 @@ export class MediaDataController {
     @Param('roomId') roomId: string,
     @Body() data: ICreateMediaStreamProducerDto,
   ) {
-    const track = await this.service.createMediaStreamProducer(roomId, data);
-
-    return { track };
+    return this.service.createMediaStreamProducer(roomId, data);
   }
 
   @HttpCode(200)
@@ -72,9 +70,7 @@ export class MediaDataController {
     @Param('roomId') roomId: string,
     @Body() data: ICreateMediaStreamConsumerDto,
   ) {
-    const track = await this.service.createMediaStreamConsumer(roomId, data);
-
-    return { track };
+    return this.service.createMediaStreamConsumer(roomId, data);
   }
 
   @HttpCode(200)

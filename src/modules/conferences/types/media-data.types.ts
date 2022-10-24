@@ -42,3 +42,8 @@ export interface IResumeMediaStreamConsumerDto {
   memberId: string;
   consumerId: string;
 }
+
+export interface IGetMemberMediaDataDto {
+  memberId: string;
+  streams: Array<{ producerId: string; mediaKind: MediaKind }>;
+}

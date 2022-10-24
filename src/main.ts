@@ -23,14 +23,14 @@ async function bootstrap() {
     }),
   );
 
-  /** Подключение Redis для синхронизации разных кластеров для Websocket */
-  const redisIoAdapter = new RedisIoAdapter(app);
-  await redisIoAdapter.connectToRedis(
-    configService.get('REDIS_HOST'),
-    configService.get('REDIS_PORT'),
-  );
-
-  app.useWebSocketAdapter(redisIoAdapter);
+  // /** Подключение Redis для синхронизации разных кластеров для Websocket */
+  // const redisIoAdapter = new RedisIoAdapter(app);
+  // await redisIoAdapter.connectToRedis(
+  //   configService.get('REDIS_HOST'),
+  //   configService.get('REDIS_PORT'),
+  // );
+  //
+  // app.useWebSocketAdapter(redisIoAdapter);
 
   await app.listen(configService.get('PORT') || 3000);
 }
