@@ -1,3 +1,4 @@
+import { AudioLevelObserver } from 'mediasoup/node/lib/AudioLevelObserver';
 import { Consumer } from 'mediasoup/node/lib/Consumer';
 import { Producer } from 'mediasoup/node/lib/Producer';
 import { Router } from 'mediasoup/node/lib/Router';
@@ -57,10 +58,18 @@ export class MediaData {
     const mediaData: Array<IGetMemberMediaDataDto> = [];
 
     this.store.forEach((memberMediaData, memberId) => {
-      const streams: Array<{ producerId: string; mediaKind: MediaKind }> = [];
+      const streams: Array<{
+        producerId: string;
+        isPaused: boolean;
+        mediaKind: MediaKind;
+      }> = [];
 
       memberMediaData.producers.forEach((producer) => {
-        streams.push({ producerId: producer.id, mediaKind: producer.kind });
+        streams.push({
+          producerId: producer.id,
+          isPaused: producer.paused,
+          mediaKind: producer.kind,
+        });
       });
 
       mediaData.push({

@@ -4,5 +4,8 @@ export enum MediaDataEventEnum {
   STREAM_PAUSE = 'stream_pause',
   STREAM_RESUME = 'stream_resume',
   ACTIVE_SPEAKER = 'active_speaker',
+  AUDIO_LEVEL = 'audio_level',
+  ACTIVE_SPEAKERS = 'active_speakers',
+  SILENCE_SPEAKERS = 'silence_speakers',
   ERROR = 'media_data_error',
 }
