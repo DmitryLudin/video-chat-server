@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { MediaData } from 'src/modules/conferences/modules/media-data/media-data.model';
 import {
   IConnectMediaStreamDto,
@@ -17,7 +18,10 @@ type TRoomId = string;
 export class MediaDataService {
   private readonly _store: Map<TRoomId, MediaData>;
 
-  constructor(private readonly webRtcService: WebRtcService) {
+  constructor(
+    private readonly webRtcService: WebRtcService,
+    private readonly configService: ConfigService,
+  ) {
     this._store = new Map();
   }
 
@@ -42,19 +46,32 @@ export class MediaDataService {
   async create(roomId: string, { memberId }: ICreateMediaDataDto) {
     const router = await this.webRtcService.createRouter();
     const mediaData = new MediaData(router);
-    await mediaData.addStream(memberId);
+    await mediaData.addStream(memberId, {
+      listenIps: [
+        {
+          ip: this.configService.get('WEBRTC_LISTEN_IP'),
+          announcedIp: this.configService.get('WEBRTC_ANNOUNCED_IP'),
+        },
+      ],
+    });
     this._store.set(roomId, mediaData);
   }
 
   async addMediaStream(roomId: string, { memberId }: ICreateMediaDataDto) {
     const mediaData = this._store.get(roomId);
-    await mediaData.addStream(memberId);
+    await mediaData.addStream(memberId, {
+      listenIps: [
+        {
+          ip: this.configService.get('WEBRTC_LISTEN_IP'),
+          announcedIp: this.configService.get('WEBRTC_ANNOUNCED_IP'),
+        },
+      ],
+    });
   }
 
   async connectMediaStream(roomId: string, data: IConnectMediaStreamDto) {
     const mediaData = this._store.get(roomId);
 
-    console.log('Подключились к транспорту медиа данных');
     return mediaData.connectStreamTransport(data);
   }
 

@@ -1,9 +1,12 @@
-import { AudioLevelObserver } from 'mediasoup/node/lib/AudioLevelObserver';
 import { Consumer } from 'mediasoup/node/lib/Consumer';
 import { Producer } from 'mediasoup/node/lib/Producer';
 import { Router } from 'mediasoup/node/lib/Router';
 import { MediaKind } from 'mediasoup/node/lib/RtpParameters';
-import { WebRtcTransport } from 'mediasoup/node/lib/WebRtcTransport';
+import {
+  WebRtcTransport,
+  WebRtcTransportOptions,
+} from 'mediasoup/node/lib/WebRtcTransport';
+import { config } from 'src/constants/config';
 import {
   IConnectMediaStreamDto,
   ICreateMediaStreamConsumerDto,
@@ -13,7 +16,6 @@ import {
   IResumeMediaStreamConsumerDto,
 } from 'src/modules/conferences/types/media-data.types';
 import { IWebrtcTransportParams } from 'src/modules/conferences/types/webrtc-transport-params.interface';
-import { webRtcConfig } from 'src/modules/webrtc/constants';
 
 type TMemberId = string;
 type TProducerId = string;
@@ -81,10 +83,10 @@ export class MediaData {
     return mediaData;
   }
 
-  async addStream(memberId: string) {
+  async addStream(memberId: string, transportOptions: WebRtcTransportOptions) {
     const transports = await Promise.all([
-      this.createTransport(),
-      this.createTransport(),
+      this.createTransport(transportOptions),
+      this.createTransport(transportOptions),
     ]);
 
     this.store.set(memberId, {
@@ -224,12 +226,12 @@ export class MediaData {
     this.store.delete(memberId);
   }
 
-  private async createTransport() {
-    const { maxIncomingBitrate, initialAvailableOutgoingBitrate, listenIps } =
-      webRtcConfig.mediasoup.webRtcTransport;
+  private async createTransport(options: WebRtcTransportOptions) {
+    const { maxIncomingBitrate, initialAvailableOutgoingBitrate } =
+      config.mediasoup.webRtcTransport;
 
     const transport = await this._router.createWebRtcTransport({
-      listenIps,
+      ...options,
       enableUdp: true,
       enableTcp: true,
       preferUdp: true,

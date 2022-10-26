@@ -1,4 +1,0 @@
-services:
-  main:
-    build:
-      target: production

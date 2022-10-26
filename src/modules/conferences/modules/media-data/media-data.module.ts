@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AuthenticationModule } from 'src/modules/authentication/authentication.module';
 import { RoomsModule } from 'src/modules/conferences/modules/rooms';
 import { ConferenceGatewayHelperService } from 'src/modules/conferences/services';
@@ -8,7 +9,7 @@ import { MediaDataController } from './media-data.controller';
 import { MediaDataGateway } from './media-data.gateway';
 
 @Module({
-  imports: [WebRtcModule, AuthenticationModule, RoomsModule],
+  imports: [WebRtcModule, ConfigModule, AuthenticationModule, RoomsModule],
   providers: [
     MediaDataService,
     MediaDataGateway,

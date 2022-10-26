@@ -1,16 +1,11 @@
 import * as os from 'node:os';
-import { getLocalIp } from 'src/utils';
 
-console.log(getLocalIp());
-
-export const webRtcConfig = {
+export const config = {
   mediasoup: {
     // Worker settings
     numWorkers: Object.keys(os.cpus()).length / 2,
     worker: {
-      rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
-      rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
-      logLevel: 'debug',
+      logLevel: 'warn',
       logTags: [
         'info',
         'ice',
@@ -78,12 +73,6 @@ export const webRtcConfig = {
     },
     // WebRtcTransport settings
     webRtcTransport: {
-      listenIps: [
-        {
-          ip: '0.0.0.0',
-          announcedIp: getLocalIp(), // replace by public IP address
-        },
-      ],
       initialAvailableOutgoingBitrate: 1000000,
       minimumAvailableOutgoingBitrate: 600000,
       maxSctpMessageSize: 262144,
