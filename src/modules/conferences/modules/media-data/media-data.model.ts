@@ -1,3 +1,4 @@
+import { ActiveSpeakerObserver } from 'mediasoup/node/lib/ActiveSpeakerObserver';
 import { Consumer } from 'mediasoup/node/lib/Consumer';
 import { Producer } from 'mediasoup/node/lib/Producer';
 import { Router } from 'mediasoup/node/lib/Router';
@@ -8,6 +9,7 @@ import {
 } from 'mediasoup/node/lib/WebRtcTransport';
 import { config } from 'src/constants/config';
 import {
+  IActiveSpeakerDto,
   IConnectMediaStreamDto,
   ICreateMediaStreamConsumerDto,
   ICreateMediaStreamProducerDto,
@@ -29,6 +31,7 @@ interface IMediaStream {
 
 export class MediaData {
   private readonly _router: Router;
+  private _activeSpeakerObserver: ActiveSpeakerObserver;
   private readonly store: Map<TMemberId, IMediaStream>;
 
   get router() {
@@ -83,6 +86,27 @@ export class MediaData {
     return mediaData;
   }
 
+  async createActiveSpeakerObserver(
+    callback: (data: IActiveSpeakerDto) => void,
+  ) {
+    try {
+      if (this._activeSpeakerObserver) return;
+
+      this._activeSpeakerObserver =
+        await this._router.createActiveSpeakerObserver({ interval: 800 });
+
+      this._activeSpeakerObserver.on('dominantspeaker', ({ producer }) => {
+        this.store.forEach((memberMediaData, memberId) => {
+          if (memberMediaData.producers.get(producer.id)) {
+            callback({ memberId });
+          }
+        });
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async addStream(memberId: string, transportOptions: WebRtcTransportOptions) {
     const transports = await Promise.all([
       this.createTransport(transportOptions),
@@ -120,6 +144,12 @@ export class MediaData {
       .produce(others);
 
     mediaData.producers.set(producer.id, producer);
+
+    if (producer.kind === 'audio') {
+      await this._activeSpeakerObserver.addProducer({
+        producerId: producer.id,
+      });
+    }
 
     producer.on('transportclose', async () => {
       await producer.close();

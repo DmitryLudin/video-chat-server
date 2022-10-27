@@ -1,4 +1,4 @@
-import { Allow, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Allow, IsString, MaxLength } from 'class-validator';
 
 export class AddMessageDto {
   @IsString()

@@ -8,6 +8,7 @@ import {
   ICreateMediaStreamProducerDto,
   IPauseResumeMediaStreamProducerDto,
   IResumeMediaStreamConsumerDto,
+  IActiveSpeakerDto,
 } from 'src/modules/conferences/types/media-data.types';
 
 import { WebRtcService } from 'src/modules/webrtc/webrtc.service';
@@ -55,6 +56,14 @@ export class MediaDataService {
       ],
     });
     this._store.set(roomId, mediaData);
+  }
+
+  async createActiveSpeakerObserver(
+    roomId: string,
+    callback: (data: IActiveSpeakerDto) => void,
+  ) {
+    const mediaData = this._store.get(roomId);
+    await mediaData.createActiveSpeakerObserver(callback);
   }
 
   async addMediaStream(roomId: string, { memberId }: ICreateMediaDataDto) {

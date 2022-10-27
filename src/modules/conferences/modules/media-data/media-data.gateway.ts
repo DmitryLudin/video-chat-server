@@ -6,14 +6,16 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
   WsResponse,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { cors } from 'src/constants/cors';
 import { MediaDataEventEnum } from 'src/modules/conferences/modules/media-data/constants/media-data-event.enum';
 import { MediaDataService } from 'src/modules/conferences/modules/media-data/media-data.service';
 import { ConferenceGatewayHelperService } from 'src/modules/conferences/services';
 import {
+  IActiveSpeakerDto,
   IGetMemberMediaDataDto,
   IPauseResumeMediaStreamProducerDto,
 } from 'src/modules/conferences/types/media-data.types';
@@ -22,6 +24,9 @@ import {
 export class MediaDataGateway
   implements OnGatewayDisconnect, OnGatewayConnection
 {
+  @WebSocketServer()
+  server: Server;
+
   constructor(
     private readonly helperService: ConferenceGatewayHelperService,
     private readonly mediaDataService: MediaDataService,
@@ -48,6 +53,13 @@ export class MediaDataGateway
         memberId: member.id,
       });
       client.join(room.id);
+
+      await this.mediaDataService.createActiveSpeakerObserver(
+        room.id,
+        (data: IActiveSpeakerDto) => {
+          this.server.to(room.id).emit(MediaDataEventEnum.ACTIVE_SPEAKER, data);
+        },
+      );
     } catch (error) {
       console.log(error);
       client.emit(MediaDataEventEnum.ERROR, { error });

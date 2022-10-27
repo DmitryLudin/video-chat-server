@@ -51,3 +51,7 @@ export interface IGetMemberMediaDataDto {
     isPaused: boolean;
   }>;
 }
+
+export interface IActiveSpeakerDto {
+  memberId: string;
+}
