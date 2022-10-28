@@ -4,5 +4,6 @@ export enum MediaDataEventEnum {
   STREAM_PAUSE = 'stream_pause',
   STREAM_RESUME = 'stream_resume',
   ACTIVE_SPEAKER = 'active_speaker',
+  CLOSE_STREAM = 'close_stream',
   ERROR = 'media_data_error',
 }

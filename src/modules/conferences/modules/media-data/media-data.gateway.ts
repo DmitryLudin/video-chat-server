@@ -82,7 +82,14 @@ export class MediaDataGateway
 
       const member = room.members.find((member) => member.user.id === user.id);
 
-      return this.mediaDataService.deleteMediaStream(room.id, member.id);
+      this.mediaDataService.deleteMediaStream(room.id, member.id);
+
+      return client
+        .to(room.id)
+        .emit(
+          MediaDataEventEnum.CLOSE_STREAM,
+          this.helperService.deserializeData({ memberId: member.id }),
+        );
     } catch (error) {
       client.emit(MediaDataEventEnum.ERROR, { error });
       client.disconnect();
