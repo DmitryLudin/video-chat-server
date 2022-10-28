@@ -5,7 +5,6 @@ import { cors } from 'src/constants/cors';
 import { AppModule } from 'src/modules/app.module';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import { runInCluster } from 'src/utils';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,4 +24,6 @@ async function bootstrap() {
   await app.listen(configService.get('PORT') || 3000);
 }
 
-runInCluster(bootstrap);
+bootstrap()
+  .then(() => console.log('Server started'))
+  .catch((error) => console.log(error));

@@ -43,13 +43,10 @@ export class RoomsGateway implements OnGatewayDisconnect, OnGatewayConnection {
       );
       const isRoomClosed = room.ownerId === user.id;
 
-      client.leave(room.id);
-
       if (isRoomClosed) {
         await this.roomsService.delete(room.id);
-        return client
-          .to(room.id)
-          .emit(RoomEventEnum.CLOSE_ROOM, { isRoomClosed });
+        client.to(room.id).emit(RoomEventEnum.CLOSE_ROOM, { isRoomClosed });
+        return client.leave(room.id);
       }
 
       const updatedRoom = await this.roomsService.deleteMember(
@@ -57,12 +54,13 @@ export class RoomsGateway implements OnGatewayDisconnect, OnGatewayConnection {
         user.id,
       );
 
-      return client
+      client
         .to(room.id)
         .emit(
           RoomEventEnum.MEMBERS,
           this.helperService.deserializeData(updatedRoom.members),
         );
+      client.leave(room.id);
     } catch (error) {
       client.emit(RoomEventEnum.ERROR, { error });
       client.disconnect();

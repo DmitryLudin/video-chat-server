@@ -74,22 +74,19 @@ export class MediaDataGateway
       );
       const isRoomClosed = room.ownerId === user.id;
 
-      client.leave(room.id);
-
       if (isRoomClosed) {
-        return this.mediaDataService.delete(room.id);
+        this.mediaDataService.delete(room.id);
+        return client.leave(room.id);
       }
 
       const member = room.members.find((member) => member.user.id === user.id);
 
       this.mediaDataService.deleteMediaStream(room.id, member.id);
 
-      return client
+      client
         .to(room.id)
-        .emit(
-          MediaDataEventEnum.CLOSE_STREAM,
-          this.helperService.deserializeData({ memberId: member.id }),
-        );
+        .emit(MediaDataEventEnum.CLOSE_STREAM, { memberId: member.id });
+      client.leave(room.id);
     } catch (error) {
       client.emit(MediaDataEventEnum.ERROR, { error });
       client.disconnect();
